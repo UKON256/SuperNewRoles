@@ -43,6 +43,7 @@ namespace SuperNewRoles.Buttons
         public static CustomButton ImpostorSidekickButton;
         public static CustomButton SideKillerSidekickButton;
         public static CustomButton FalseChargesFalseChargeButton;
+        public static CustomButton arsonistButton;
 
         public static TMPro.TMP_Text sheriffNumShotsText;
 
@@ -813,6 +814,68 @@ namespace SuperNewRoles.Buttons
 
             SideKillerSidekickButton.buttonText = ModTranslation.getString("SidekickName");
             SideKillerSidekickButton.showButtonText = true;
+
+            arsonistButton = new CustomButton(
+                () => {
+                    bool dousedEveryoneAlive = RoleClass.Arsonist.dousedEveryoneAlive();
+                    if (dousedEveryoneAlive)
+                    {
+                        MessageWriter winWriter = AmongUsClient.Instance.StartRpcImmediately(PlayerControl.LocalPlayer.NetId, (byte)CustomRPC.ArsonistWin, Hazel.SendOption.Reliable, -1);
+                        AmongUsClient.Instance.FinishRpcImmediately(winWriter);
+                        RPCProcedure.arsonistWin();
+                        arsonistButton.HasEffect = false;
+                    }
+                    else if (RoleClass.Arsonist.currentTarget != null)
+                    {
+                        RoleClass.Arsonist.douseTarget = RoleClass.Arsonist.currentTarget;
+                        arsonistButton.HasEffect = true;
+                    }
+                },
+                () => { return RoleClass.Arsonist.arsonist != null && RoleClass.Arsonist.arsonist == PlayerControl.LocalPlayer && !PlayerControl.LocalPlayer.Data.IsDead; },
+                () => {
+                    bool dousedEveryoneAlive = RoleClass.Arsonist.dousedEveryoneAlive();
+                    if (dousedEveryoneAlive) arsonistButton.killButtonManager.renderer.sprite = RoleClass.Arsonist.DouseButtonSprite();
+
+                    if (arsonistButton.isEffectActive && RoleClass.Arsonist.douseTarget != RoleClass.Arsonist.currentTarget)
+                    {
+                        RoleClass.Arsonist.douseTarget = null;
+                        arsonistButton.Timer = 0f;
+                        arsonistButton.isEffectActive = false;
+                    }
+
+                    return PlayerControl.LocalPlayer.CanMove && (dousedEveryoneAlive || RoleClass.Arsonist.currentTarget != null);
+                },
+                () => {
+                    arsonistButton.Timer = arsonistButton.MaxTimer;
+                    arsonistButton.isEffectActive = false;
+                    RoleClass.Arsonist.douseTarget = null;
+                },
+                RoleClass.Arsonist.IgniteButtonSprite(),
+                new Vector3(-1.3f, 0f, 0f),
+                __instance,
+                KeyCode.Q,
+                true,
+
+                RoleClass.Arsonist.Duration,
+                () => {
+                    if (Arsonist.douseTarget != null) Arsonist.dousedPlayers.Add(Arsonist.douseTarget);
+                    Arsonist.douseTarget = null;
+                    arsonistButton.Timer = Arsonist.dousedEveryoneAlive() ? 0 : arsonistButton.MaxTimer;
+
+                    int playerCounter = 0;
+                    Vector3 bottomLeft = new Vector3(-HudManager.Instance.UseButton.transform.localPosition.x, HudManager.Instance.UseButton.transform.localPosition.y, HudManager.Instance.UseButton.transform.localPosition.z);
+                    bottomLeft += new Vector3(-0.25f, -0.25f, 0);
+                    foreach (PlayerControl p in Arsonist.dousedPlayers)
+                    {
+                        if (Arsonist.dousedIcons.ContainsKey(p.PlayerId))
+                        {
+                            Arsonist.dousedIcons[p.PlayerId].gameObject.SetActive(true);
+                            Arsonist.dousedIcons[p.PlayerId].transform.localPosition = bottomLeft + Vector3.right * playerCounter * 0.35f;
+                            playerCounter++;
+                        }
+                    }
+                }
+            );
 
             RoleClass.SerialKiller.SuicideKillText = GameObject.Instantiate(HudManager.Instance.KillButton.cooldownTimerText, HudManager.Instance.KillButton.cooldownTimerText.transform.parent);
             RoleClass.SerialKiller.SuicideKillText.text = "";

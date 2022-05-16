@@ -1724,10 +1724,54 @@ namespace SuperNewRoles.Roles
         public static class Arsonist
         {
             public static List<PlayerControl> ArsonistPlayer;
-            public static Color32 color = new Color32(0, 255, 0, byte.MaxValue);
+            public static PlayerControl arsonist;
+            public static Color32 color = new Color32(152, 38, 0, byte.MaxValue);
+            public static float Cooldown = 30f;
+            public static float Duration = 3f;
+            public static bool triggerArsonistWin = false;
+
+            public static PlayerControl currentTarget;
+            public static PlayerControl douseTarget;
+            public static List<PlayerControl> dousedPlayers = new List<PlayerControl>();
+            public static Dictionary<byte, PoolablePlayer> dousedIcons = new Dictionary<byte, PoolablePlayer>();
+
+            private static Sprite DousebuttonSprite;
+            private static Sprite IgnitebuttonSprite;
+
+            public static Sprite DouseButtonSprite()
+            {
+                if (DousebuttonSprite) return DousebuttonSprite;
+                DousebuttonSprite = ModHelpers.loadSpriteFromResources("SuperNewRoles.Resources.ArsonistDouseButton.png", 115f);
+                return DousebuttonSprite;
+            }
+            public static Sprite IgniteButtonSprite()
+            {
+                if (IgnitebuttonSprite) return IgnitebuttonSprite;
+                IgnitebuttonSprite = ModHelpers.loadSpriteFromResources("SuperNewRoles.Resources.ArsonistIgniteButton.png", 115f);
+                return IgnitebuttonSprite;
+            }
             public static void ClearAndReload()
             {
                 ArsonistPlayer = new List<PlayerControl>();
+                arsonist = null;
+                currentTarget = null;
+                douseTarget = null;
+                triggerArsonistWin = false;
+                dousedPlayers = new List<PlayerControl>();
+                foreach (PoolablePlayer p in dousedIcons.Values)
+                {
+                    if (p != null && p.gameObject != null)
+                    {
+                        UnityEngine.Object.Destroy(p.gameObject);
+                    }
+                }
+                dousedIcons = new Dictionary<byte, PoolablePlayer>();
+                Cooldown = CustomOptions.ArsonistCooldown.getFloat();
+                Duration = CustomOptions.ArsonistDuration.getFloat();
+            }
+            public static bool dousedEveryoneAlive()
+            {
+                return PlayerControl.AllPlayerControls.ToArray().All(x => { return x == Arsonist.arsonist || x.Data.IsDead || Arsonist.dousedPlayers.Any(y => y.PlayerId == x.PlayerId); });
             }
         }
         //新ロールクラス
