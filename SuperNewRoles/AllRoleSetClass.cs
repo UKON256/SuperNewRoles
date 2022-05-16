@@ -839,6 +839,8 @@ namespace SuperNewRoles
                     return CustomOption.CustomOptions.FoxPlayerCount.getFloat();
                     case (RoleId.TeleportingJackal):
                     return CustomOption.CustomOptions.TeleportingJackalPlayerCount.getFloat();
+                    case (RoleId.Arsonist):
+                    return CustomOption.CustomOptions.ArsonistPlayerCount.getFloat();
                     //プレイヤーカウント
             }
             return 1;
@@ -2168,6 +2170,22 @@ namespace SuperNewRoles
             {
                 int OptionDate = int.Parse(CustomOption.CustomOptions.TeleportingJackalOption.getString().Replace("0%", ""));
                 RoleId ThisRoleId = RoleId.TeleportingJackal;
+                if (OptionDate == 10)
+                {
+                    Neutonepar.Add(ThisRoleId);
+                }
+                else
+                {
+                    for (int i = 1; i <= OptionDate; i++)
+                    {
+                        Neutnotonepar.Add(ThisRoleId);
+                    }
+                }
+            }
+        if (!(CustomOption.CustomOptions.ArsonistOption.getString().Replace("0%", "") == ""))
+            {
+                int OptionDate = int.Parse(CustomOption.CustomOptions.ArsonistOption.getString().Replace("0%", ""));
+                RoleId ThisRoleId = RoleId.Arsonist;
                 if (OptionDate == 10)
                 {
                     Neutonepar.Add(ThisRoleId);

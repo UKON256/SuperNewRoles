@@ -121,6 +121,7 @@ namespace SuperNewRoles.Roles
             EvilSeer.ClearAndReload();
             RemoteSheriff.ClearAndReload();
             TeleportingJackal.ClearAndReload();
+            Arsonist.ClearAndReload();
             //ロールクリア
             Quarreled.ClearAndReload();
             Lovers.ClearAndReload();
@@ -1718,6 +1719,15 @@ namespace SuperNewRoles.Roles
                 IsImpostorLight = CustomOptions.TeleportingJackalIsImpostorLight.getBool();
                 CoolTime = CustomOptions.TeleportingJackalCoolTime.getFloat();
                 DurationTime = CustomOptions.TeleportingJackalDurationTime.getFloat();
+            }
+        }
+        public static class Arsonist
+        {
+            public static List<PlayerControl> ArsonistPlayer;
+            public static Color32 color = new Color32(0, 255, 0, byte.MaxValue);
+            public static void ClearAndReload()
+            {
+                ArsonistPlayer = new List<PlayerControl>();
             }
         }
         //新ロールクラス
