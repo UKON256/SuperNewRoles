@@ -34,6 +34,7 @@ namespace SuperNewRoles.EndGame
         MadJesterWin,
         FalseChargesWin,
         FoxWin,
+        ArsonistWin,
         BugEnd
     }
     [HarmonyPatch(typeof(ShipStatus))]
@@ -231,6 +232,12 @@ namespace SuperNewRoles.EndGame
                 text = "FoxName";
                 textRenderer.color = RoleClass.Fox.color;
                 __instance.BackgroundBar.material.SetColor("_Color", Roles.RoleClass.Fox.color);
+            }
+            else if (AdditionalTempData.winCondition == WinCondition.ArsonistWin)
+            {
+                text = "ArsonistName";
+                textRenderer.color = RoleClass.Arsonist.color;
+                __instance.BackgroundBar.material.SetColor("_Color", Roles.RoleClass.Arsonist.color);
             }
             else if (AdditionalTempData.gameOverReason == GameOverReason.HumansByTask || AdditionalTempData.gameOverReason == GameOverReason.HumansByVote)
             {

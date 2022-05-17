@@ -1724,14 +1724,13 @@ namespace SuperNewRoles.Roles
         public static class Arsonist
         {
             public static List<PlayerControl> ArsonistPlayer;
-            public static PlayerControl arsonist;
             public static Color32 color = new Color32(152, 38, 0, byte.MaxValue);
             public static float Cooldown = 30f;
             public static float Duration = 3f;
             public static bool triggerArsonistWin = false;
 
-            public static PlayerControl currentTarget;
-            public static PlayerControl douseTarget;
+            public static List<PlayerControl> currentTarget;
+            public static List<PlayerControl> douseTarget;
             public static List<PlayerControl> dousedPlayers = new List<PlayerControl>();
             public static Dictionary<byte, PoolablePlayer> dousedIcons = new Dictionary<byte, PoolablePlayer>();
 
@@ -1753,7 +1752,6 @@ namespace SuperNewRoles.Roles
             public static void ClearAndReload()
             {
                 ArsonistPlayer = new List<PlayerControl>();
-                arsonist = null;
                 currentTarget = null;
                 douseTarget = null;
                 triggerArsonistWin = false;
@@ -1769,9 +1767,14 @@ namespace SuperNewRoles.Roles
                 Cooldown = CustomOptions.ArsonistCooldown.getFloat();
                 Duration = CustomOptions.ArsonistDuration.getFloat();
             }
+                
             public static bool dousedEveryoneAlive()
             {
-                return PlayerControl.AllPlayerControls.ToArray().All(x => { return x == Arsonist.arsonist || x.Data.IsDead || Arsonist.dousedPlayers.Any(y => y.PlayerId == x.PlayerId); });
+                foreach (PlayerControl ArsonistPlayer in ArsonistPlayer)
+                {
+                    return PlayerControl.AllPlayerControls.ToArray().All(x => { return x == ArsonistPlayer || x.Data.IsDead || dousedPlayers.Any(y => y.PlayerId == x.PlayerId); });
+                }
+                return true;
             }
         }
         //新ロールクラス

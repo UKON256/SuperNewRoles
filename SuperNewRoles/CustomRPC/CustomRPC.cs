@@ -155,7 +155,8 @@ namespace SuperNewRoles.CustomRPC
         UseMadStuntmanCount,
         CustomEndGame,
         UncheckedProtect,
-        SetBot
+        SetBot,
+        ArsonistWin,
     }
     public static class RPCProcedure
     {
@@ -641,6 +642,14 @@ namespace SuperNewRoles.CustomRPC
                 FinalStatusData.FinalStatuses[player.PlayerId] = FinalStatus.NekomataExiled;
             }
         }
+        public static void ArsonistWin()
+        {
+            RoleClass.Arsonist.triggerArsonistWin = true;
+            foreach (PlayerControl p in PlayerControl.AllPlayerControls)
+            {
+                if (p != RoleClass.Arsonist.ArsonistPlayer) p.Exiled();
+            }
+        }
         [HarmonyPatch(typeof(KillAnimation), nameof(KillAnimation.CoPerformKill))]
         class KillAnimationCoPerformKillPatch
         {
@@ -870,6 +879,9 @@ namespace SuperNewRoles.CustomRPC
                         break;
                     case (byte)CustomRPC.SetBot:
                         SetBot(reader.ReadByte());
+                        break;
+                    case (byte)CustomRPC.ArsonistWin:
+                        RPCProcedure.ArsonistWin();
                         break;
                 }
             }
