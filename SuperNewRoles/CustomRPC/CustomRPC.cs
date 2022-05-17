@@ -647,7 +647,10 @@ namespace SuperNewRoles.CustomRPC
             RoleClass.Arsonist.triggerArsonistWin = true;
             foreach (PlayerControl p in PlayerControl.AllPlayerControls)
             {
-                if (p != RoleClass.Arsonist.ArsonistPlayer) p.Exiled();
+                foreach (PlayerControl ArsonistPlayer in RoleClass.Arsonist.ArsonistPlayer)
+                {
+                    if (p != ArsonistPlayer) p.Exiled();
+                }
             }
         }
         [HarmonyPatch(typeof(KillAnimation), nameof(KillAnimation.CoPerformKill))]

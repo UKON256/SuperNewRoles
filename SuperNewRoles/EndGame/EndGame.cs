@@ -508,6 +508,7 @@ namespace SuperNewRoles.EndGame
             notWinners.AddRange(RoleClass.MadSeer.MadSeerPlayer);
             notWinners.AddRange(RoleClass.FalseCharges.FalseChargesPlayer);
             notWinners.AddRange(RoleClass.Fox.FoxPlayer);
+            notWinners.AddRange(RoleClass.Arsonist.ArsonistPlayer);
             notWinners.AddRange(BotManager.AllBots);
 
             foreach (PlayerControl p in RoleClass.Survivor.SurvivorPlayer)
@@ -536,6 +537,7 @@ namespace SuperNewRoles.EndGame
             bool WorkpersonWin = gameOverReason == (GameOverReason)CustomGameOverReason.WorkpersonWin;
             bool FalseChargesWin = gameOverReason == (GameOverReason)CustomGameOverReason.FalseChargesWin;
             bool FoxWin = gameOverReason == (GameOverReason)CustomGameOverReason.FoxWin;
+            bool ArsonistWin = gameOverReason == (GameOverReason)CustomGameOverReason.ArsonistWin;
             bool BUGEND = gameOverReason == (GameOverReason)CustomGameOverReason.BugEnd;
             if (ModeHandler.isMode(ModeId.SuperHostRoles) && EndData != null)
             {
@@ -546,6 +548,7 @@ namespace SuperNewRoles.EndGame
                 QuarreledWin = EndData == CustomGameOverReason.QuarreledWin;
                 FoxWin = EndData == CustomGameOverReason.FoxWin;
                 JackalWin = EndData == CustomGameOverReason.JackalWin;
+                ArsonistWin = EndData == CustomGameOverReason.ArsonistWin;
             }
 
 

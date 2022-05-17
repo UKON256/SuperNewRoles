@@ -692,4 +692,16 @@ namespace SuperNewRoles.Patches
             return result;
         }
     }
+    public static void ArsonistSetTarget()
+    {
+        if (RoleClass.Arsonist.ArsonistPlayer == null || RoleClass.Arsonist.ArsonistPlayer != PlayerControl.LocalPlayer) return;
+        List<PlayerControl> untargetables;
+        if (RoleClass.Arsonist.douseTarget != null)
+            untargetables = PlayerControl.AllPlayerControls.ToArray().Where(x => x.PlayerId != RoleClass.Arsonist.douseTarget.PlayerId).ToList();
+        else
+            untargetables = RoleClass.Arsonist.dousedPlayers;
+        RoleClass.Arsonist.currentTarget = setTarget(untargetablePlayers: untargetables);
+        if (RoleClass.Arsonist.currentTarget != null) setPlayerOutline(RoleClass.Arsonist.currentTarget, RoleClass.Arsonist.color);
+    }
+    if (PlayerControl.LocalPlayer == __instance) {
 }
