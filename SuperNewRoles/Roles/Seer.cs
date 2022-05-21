@@ -1,19 +1,8 @@
-using System.Net;
-using System.Linq;
-using BepInEx;
-using BepInEx.Configuration;
-using BepInEx.IL2CPP;
 using HarmonyLib;
-using Hazel;
 using System;
 using System.Collections.Generic;
-using System.Collections;
-using System.IO;
 using UnityEngine;
-using SuperNewRoles.Patches;
-using System.Reflection;
-using SuperNewRoles.Roles;
-using System.Text;
+
 
 
 
@@ -58,103 +47,112 @@ namespace SuperNewRoles.Roles
 
             static void WrapUpPostfix(GameData.PlayerInfo exiled)
             {
-
-
                 // Seer spawn souls
 
                 foreach (PlayerControl SeerPlayer in RoleClass.Seer.SeerPlayer)
-                {
-                    if (RoleClass.Seer.deadBodyPositions != null && RoleClass.Seer.SeerPlayer != null && PlayerControl.LocalPlayer == SeerPlayer && (RoleClass.Seer.mode == 0 || RoleClass.Seer.mode == 2))
-
-
-                    {
-                        foreach (Vector3 pos in RoleClass.Seer.deadBodyPositions)
+                    foreach (PlayerControl MadSeerPlayer in RoleClass.MadSeer.MadSeerPlayer)
+                        foreach (PlayerControl EvilSeerPlayer in RoleClass.EvilSeer.EvilSeerPlayer)
                         {
-                            GameObject soul = new GameObject();
-                            soul.transform.position = pos;
-                            soul.layer = 5;
-                            var rend = soul.AddComponent<SpriteRenderer>();
-                            rend.sprite = Seer.getSoulSprite();
-
-                            if (RoleClass.Seer.limitSoulDuration)
+                            if (RoleClass.Seer.deadBodyPositions != null && ( RoleClass.Seer.SeerPlayer != null || RoleClass.MadSeer.MadSeerPlayer != null || RoleClass.EvilSeer.EvilSeerPlayer != null )
+                                &&
+                                    (
+                                        (PlayerControl.LocalPlayer == SeerPlayer && (RoleClass.Seer.mode == 0 || RoleClass.Seer.mode == 2))
+                                        || (PlayerControl.LocalPlayer == MadSeerPlayer && (RoleClass.MadSeer.mode == 0 || RoleClass.MadSeer.mode == 2))
+                                        || (PlayerControl.LocalPlayer == EvilSeerPlayer && (RoleClass.EvilSeer.mode == 0 || RoleClass.EvilSeer.mode == 2))
+                                    )
+                                )
                             {
-                                HudManager.Instance.StartCoroutine(Effects.Lerp(RoleClass.Seer.soulDuration, new Action<float>((p) =>
+                                foreach (Vector3 pos in RoleClass.Seer.deadBodyPositions)
                                 {
-                                    if (rend != null)
+                                    GameObject soul = new GameObject();
+                                    soul.transform.position = pos;
+                                    soul.layer = 5;
+                                    var rend = soul.AddComponent<SpriteRenderer>();
+                                    rend.sprite = Seer.getSoulSprite();
+
+                                    if (RoleClass.Seer.limitSoulDuration || RoleClass.MadSeer.limitSoulDuration || RoleClass.EvilSeer.limitSoulDuration)
                                     {
-                                        var tmp = rend.color;
-                                        tmp.a = Mathf.Clamp01(1 - p);
-                                        rend.color = tmp;
+                                        HudManager.Instance.StartCoroutine(Effects.Lerp(RoleClass.Seer.soulDuration, new Action<float>((p) =>
+                                        HudManager.Instance.StartCoroutine(Effects.Lerp(RoleClass.MadSeer.soulDuration, new Action<float>((p) =>
+                                        HudManager.Instance.StartCoroutine(Effects.Lerp(RoleClass.EvilSeer.soulDuration, new Action<float>((p) =>
+                                        {
+                                            if (rend != null)
+                                            {
+                                                var tmp = rend.color;
+                                                tmp.a = Mathf.Clamp01(1 - p);
+                                                rend.color = tmp;
+                                            }
+                                            if (p == 1f && rend != null && rend.gameObject != null) UnityEngine.Object.Destroy(rend.gameObject);
+                                        })))))))));
                                     }
-                                    if (p == 1f && rend != null && rend.gameObject != null) UnityEngine.Object.Destroy(rend.gameObject);
-                                })));
+                                }
+                                RoleClass.Seer.deadBodyPositions = new List<Vector3>();
                             }
                         }
-                        RoleClass.Seer.deadBodyPositions = new List<Vector3>();
-                    }
-                }
-                foreach (PlayerControl MadSeerPlayer in RoleClass.MadSeer.MadSeerPlayer)
-                {
-                    if (RoleClass.MadSeer.deadBodyPositions != null && RoleClass.MadSeer.MadSeerPlayer != null && PlayerControl.LocalPlayer == MadSeerPlayer && (RoleClass.MadSeer.mode == 0 || RoleClass.MadSeer.mode == 2))
 
 
-                    {
-                        foreach (Vector3 pos in RoleClass.MadSeer.deadBodyPositions)
-                        {
-                            GameObject soul = new GameObject();
-                            soul.transform.position = pos;
-                            soul.layer = 5;
-                            var rend = soul.AddComponent<SpriteRenderer>();
-                            rend.sprite = Seer.getSoulSprite();
-
-                            if (RoleClass.MadSeer.limitSoulDuration)
-                            {
-                                HudManager.Instance.StartCoroutine(Effects.Lerp(RoleClass.MadSeer.soulDuration, new Action<float>((p) =>
+                /*                foreach (PlayerControl MadSeerPlayer in RoleClass.MadSeer.MadSeerPlayer)
                                 {
-                                    if (rend != null)
+                                    if (RoleClass.MadSeer.deadBodyPositions != null && RoleClass.MadSeer.MadSeerPlayer != null && PlayerControl.LocalPlayer == MadSeerPlayer && (RoleClass.MadSeer.mode == 0 || RoleClass.MadSeer.mode == 2))
+
+
                                     {
-                                        var tmp = rend.color;
-                                        tmp.a = Mathf.Clamp01(1 - p);
-                                        rend.color = tmp;
+                                        foreach (Vector3 pos in RoleClass.MadSeer.deadBodyPositions)
+                                        {
+                                            GameObject soul = new GameObject();
+                                            soul.transform.position = pos;
+                                            soul.layer = 5;
+                                            var rend = soul.AddComponent<SpriteRenderer>();
+                                            rend.sprite = Seer.getSoulSprite();
+
+                                            if (RoleClass.MadSeer.limitSoulDuration)
+                                            {
+                                                HudManager.Instance.StartCoroutine(Effects.Lerp(RoleClass.MadSeer.soulDuration, new Action<float>((p) =>
+                                                {
+                                                    if (rend != null)
+                                                    {
+                                                        var tmp = rend.color;
+                                                        tmp.a = Mathf.Clamp01(1 - p);
+                                                        rend.color = tmp;
+                                                    }
+                                                    if (p == 1f && rend != null && rend.gameObject != null) UnityEngine.Object.Destroy(rend.gameObject);
+                                                })));
+                                            }
+                                        }
+                                        RoleClass.MadSeer.deadBodyPositions = new List<Vector3>();
                                     }
-                                    if (p == 1f && rend != null && rend.gameObject != null) UnityEngine.Object.Destroy(rend.gameObject);
-                                })));
-                            }
-                        }
-                        RoleClass.MadSeer.deadBodyPositions = new List<Vector3>();
-                    }
-                }
-                foreach (PlayerControl EvilSeerPlayer in RoleClass.EvilSeer.EvilSeerPlayer)
-                {
-                    if (RoleClass.EvilSeer.deadBodyPositions != null && RoleClass.EvilSeer.EvilSeerPlayer != null && PlayerControl.LocalPlayer == EvilSeerPlayer && (RoleClass.EvilSeer.mode == 0 || RoleClass.EvilSeer.mode == 2))
-
-
-                    {
-                        foreach (Vector3 pos in RoleClass.EvilSeer.deadBodyPositions)
-                        {
-                            GameObject soul = new GameObject();
-                            soul.transform.position = pos;
-                            soul.layer = 5;
-                            var rend = soul.AddComponent<SpriteRenderer>();
-                            rend.sprite = Seer.getSoulSprite();
-
-                            if (RoleClass.EvilSeer.limitSoulDuration)
-                            {
-                                HudManager.Instance.StartCoroutine(Effects.Lerp(RoleClass.EvilSeer.soulDuration, new Action<float>((p) =>
+                                }
+                                foreach (PlayerControl EvilSeerPlayer in RoleClass.EvilSeer.EvilSeerPlayer)
                                 {
-                                    if (rend != null)
+                                    if (RoleClass.EvilSeer.deadBodyPositions != null && RoleClass.EvilSeer.EvilSeerPlayer != null && PlayerControl.LocalPlayer == EvilSeerPlayer && (RoleClass.EvilSeer.mode == 0 || RoleClass.EvilSeer.mode == 2))
+
+
                                     {
-                                        var tmp = rend.color;
-                                        tmp.a = Mathf.Clamp01(1 - p);
-                                        rend.color = tmp;
+                                        foreach (Vector3 pos in RoleClass.EvilSeer.deadBodyPositions)
+                                        {
+                                            GameObject soul = new GameObject();
+                                            soul.transform.position = pos;
+                                            soul.layer = 5;
+                                            var rend = soul.AddComponent<SpriteRenderer>();
+                                            rend.sprite = Seer.getSoulSprite();
+
+                                            if (RoleClass.EvilSeer.limitSoulDuration)
+                                            {
+                                                HudManager.Instance.StartCoroutine(Effects.Lerp(RoleClass.EvilSeer.soulDuration, new Action<float>((p) =>
+                                                {
+                                                    if (rend != null)
+                                                    {
+                                                        var tmp = rend.color;
+                                                        tmp.a = Mathf.Clamp01(1 - p);
+                                                        rend.color = tmp;
+                                                    }
+                                                    if (p == 1f && rend != null && rend.gameObject != null) UnityEngine.Object.Destroy(rend.gameObject);
+                                                })));
+                                            }
+                                        }
+                                        RoleClass.EvilSeer.deadBodyPositions = new List<Vector3>();
                                     }
-                                    if (p == 1f && rend != null && rend.gameObject != null) UnityEngine.Object.Destroy(rend.gameObject);
-                                })));
-                            }
-                        }
-                        RoleClass.EvilSeer.deadBodyPositions = new List<Vector3>();
-                    }
-                }
+                                }*/
 
             }
 
@@ -178,7 +176,7 @@ namespace SuperNewRoles.Roles
                         if (RoleClass.Seer.deadBodyPositions != null) RoleClass.Seer.deadBodyPositions.Add(target.transform.position);
                     }
 
-                    foreach (PlayerControl MadSeerPlayer in RoleClass.MadSeer.MadSeerPlayer)
+/*                    foreach (PlayerControl MadSeerPlayer in RoleClass.MadSeer.MadSeerPlayer)
                     {
                         // Seer show flash and add dead player position
 
@@ -204,7 +202,7 @@ namespace SuperNewRoles.Roles
 
 
                         if (RoleClass.EvilSeer.deadBodyPositions != null) RoleClass.EvilSeer.deadBodyPositions.Add(target.transform.position);
-                    }
+                    }*/
 
                 }
             }
