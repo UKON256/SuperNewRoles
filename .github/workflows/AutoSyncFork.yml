@@ -12,10 +12,11 @@ jobs:
       - name: Merge upstream
         run: |
           git config --global user.name 'UKON256'
-          git config --global user.email 'your-username@users.noreply.github.com'
 
+          #制限を無視しすべてをフェッチ
           git pull --unshallow
 
+          #フォーク元のURLを指定
           git remote add upstream https://github.com/ykundesu/SuperNewRoles.git
           git fetch upstream
           
