@@ -1,0 +1,27 @@
+name: "フォークの自動更新"
+on:
+  schedule:
+      #毎週日曜の午前2時(UTC)に実行
+    - cron:  '0 2 * * 0'
+jobs:
+  merge:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Merge upstream
+        run: |
+          git config --global user.name 'UKON256'
+          git config --global user.email 'your-username@users.noreply.github.com'
+
+          git pull --unshallow
+
+          git remote add upstream https://github.com/ykundesu/SuperNewRoles.git
+          git fetch upstream
+          
+          git checkout -b feature/x origin/feature/x
+          git merge --no-edit upstream/feature/x
+          git push origin feature/x
+
+          git checkout master
+          git merge --no-edit upstream/master
+          git push origin master
