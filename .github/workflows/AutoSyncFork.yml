@@ -4,21 +4,20 @@ on:
       #毎週日曜の午前2時(UTC)に実行
     - cron:  '0 2 * * 0'
   workflow_dispatch:
+  
 jobs:
   merge:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Merge upstream
+      - name: "上流からマージ"
         run: |
-          git config --global user.name 'UKON256'
-
-          #制限を無視しすべてをフェッチ
-          git pull --unshallow
-
           #フォーク元のURLを指定
           git remote add upstream https://github.com/ykundesu/SuperNewRoles.git
           git fetch upstream
+          
+          #制限を無視しすべてをフェッチ
+          git pull --unshallow
           
           git checkout -b feature/x origin/feature/x
           git merge --no-edit upstream/feature/x
