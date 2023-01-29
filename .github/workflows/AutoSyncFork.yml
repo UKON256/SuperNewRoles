@@ -18,10 +18,6 @@ jobs:
           
           #制限を無視しすべてをフェッチ
           git pull --unshallow
-          
-          git checkout -b feature/x origin/feature/x
-          git merge --no-edit upstream/feature/x
-          git push origin feature/x
 
           git checkout master
           git merge --no-edit upstream/master
