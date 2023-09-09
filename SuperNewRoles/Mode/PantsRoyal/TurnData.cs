@@ -14,6 +14,8 @@ public class TurnData
     public float TurnTimerFirst;
     public float StartTimer;
     public float LastUpdateStartTimer;
+    public float LastUpdateCountdownTime;
+    public bool CooldowntextReseted = false;
     public bool IsStarted;
     public TurnData(bool IsStart = true)
     {
@@ -33,21 +35,24 @@ public class TurnData
         else if (StartPlayerCount == 3)
         {
             TurnTimerFirst = StartPlayerCount * 15f;
-        } else if (StartPlayerCount == 2)
+        }
+        else if (StartPlayerCount == 2)
         {
             TurnTimerFirst = StartPlayerCount * 17.5f;
         }
         else
         {
-            Logger.Info("エラーが発生しました。:"+StartPlayerCount.ToString());
+            Logger.Info("エラーが発生しました。:" + StartPlayerCount.ToString());
         }
         TurnTimer = TurnTimerFirst;
         EndPlayerCount = (int)Math.Floor(StartPlayerCount / 2.0);
         StartTimer = 5;
         LastUpdateStartTimer = StartTimer + 1;
         IsStarted = IsStart;
+        LastUpdateCountdownTime = TurnTimer + 11;
     }
-    public void EndTurn() {
+    public void EndTurn()
+    {
         foreach (PlayerControl player in PlayerControl.AllPlayerControls)
         {
             if (player.IsBot()) continue;

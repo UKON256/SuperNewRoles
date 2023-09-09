@@ -5,9 +5,10 @@ using SuperNewRoles.CustomObject;
 using SuperNewRoles.Helpers;
 using SuperNewRoles.Mode;
 using SuperNewRoles.Mode.SuperHostRoles;
+using SuperNewRoles.Replay;
 using SuperNewRoles.Roles;
-using SuperNewRoles.Roles.Impostor;
 using SuperNewRoles.Roles.Crewmate;
+using SuperNewRoles.Roles.Impostor;
 using SuperNewRoles.Roles.Neutral;
 using SuperNewRoles.Roles.RoleBases;
 using SuperNewRoles.Sabotage;
@@ -77,8 +78,8 @@ public class FixedUpdate
     {
         if (!PlayerAnimation.IsCreatedAnim(__instance.PlayerId))
             new PlayerAnimation(__instance);
+        if (ReplayManager.IsReplayMode && !ReplayLoader.IsInited) return;
         if (__instance != PlayerControl.LocalPlayer) return;
-        SluggerDeadbody.AllFixedUpdate();
         PlayerAnimation.FixedAllUpdate();
         PVCreator.FixedUpdate();
 
@@ -116,6 +117,7 @@ public class FixedUpdate
                 Balancer.Update();
                 Pteranodon.FixedUpdateAll();
                 BlackHatHacker.FixedUpdate();
+                JumpDancer.FixedUpdate();
                 if (PlayerControl.LocalPlayer.IsAlive())
                 {
                     if (PlayerControl.LocalPlayer.IsImpostor()) { SetTarget.ImpostorSetTarget(); }
@@ -273,6 +275,7 @@ public class FixedUpdate
                 break;
             case ModeId.SuperHostRoles:
                 Mode.SuperHostRoles.FixedUpdate.Update();
+                Penguin.FixedUpdate();
                 if (PlayerControl.LocalPlayer.IsRole(RoleId.Mafia))
                 {
                     Mafia.FixedUpdate();

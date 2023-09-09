@@ -28,7 +28,6 @@ namespace SuperNewRoles.Mode.BattleRoyal
         public static bool Is;
         public static bool Prefix(GameData __instance, ref bool __result)
         {
-            Logger.Info(FastDestroyableSingleton<HudManager>.Instance.IsIntroDisplayed.ToString(), "ISST");
             if (AmongUsClient.Instance is null || AmongUsClient.Instance.GameState != InnerNet.InnerNetClient.GameStates.Started || !ModeHandler.IsMode(ModeId.BattleRoyal) || Is || !Main.IsIntroEnded)
             {
                 Is = false;
@@ -137,6 +136,7 @@ namespace SuperNewRoles.Mode.BattleRoyal
         }
         public static void OnWrapUp()
         {
+            if (!AmongUsClient.Instance.AmHost) return;
             if (!ModeHandler.IsMode(ModeId.BattleRoyal)) return;
             if (Main.IsRoleSetted) return;
             Main.IsRoleSetted = true;

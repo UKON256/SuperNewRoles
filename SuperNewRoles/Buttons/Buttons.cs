@@ -14,6 +14,7 @@ using SuperNewRoles.Patches;
 using SuperNewRoles.Roles;
 using SuperNewRoles.Roles.Crewmate;
 using SuperNewRoles.Roles.Impostor;
+using SuperNewRoles.Roles.Impostor.MadRole;
 using SuperNewRoles.Roles.Neutral;
 using TMPro;
 using UnityEngine;
@@ -616,7 +617,7 @@ static class HudManagerStartPatch
             },
             () =>
             {
-                PenguinButton.MaxTimer = CustomOptionHolder.PenguinCoolTime.GetFloat();
+                PenguinButton.MaxTimer = ModeHandler.IsMode(ModeId.Default) ? CustomOptionHolder.PenguinCoolTime.GetFloat() : RoleClass.IsFirstMeetingEnd ? GameOptionsManager.Instance.CurrentGameOptions.GetFloat(FloatOptionNames.KillCooldown) : 10;
                 PenguinButton.Timer = PenguinButton.MaxTimer;
                 PenguinButton.effectCancellable = false;
                 PenguinButton.EffectDuration = CustomOptionHolder.PenguinDurationTime.GetFloat();
@@ -634,7 +635,8 @@ static class HudManagerStartPatch
             5f,
             () =>
             {
-                PlayerControl.LocalPlayer.UncheckedMurderPlayer(RoleClass.Penguin.currentTarget);
+                if (ModeHandler.IsMode(ModeId.Default))
+                    PlayerControl.LocalPlayer.UncheckedMurderPlayer(RoleClass.Penguin.currentTarget);
             }
         )
         {
@@ -3354,6 +3356,14 @@ static class HudManagerStartPatch
         Squid.SetusCustomButton(__instance);
 
         OrientalShaman.SetupCustomButtons(__instance);
+
+        BlackHatHacker.SetupCustomButtons(__instance);
+
+        MadRaccoon.Button.SetupCustomButtons(__instance);
+
+        JumpDancer.SetUpCustomButtons(__instance);
+
+        // SetupCustomButtons
 
         SetCustomButtonCooldowns();
     }

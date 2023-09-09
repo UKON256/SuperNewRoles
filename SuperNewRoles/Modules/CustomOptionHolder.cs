@@ -1103,12 +1103,12 @@ public class CustomOptionHolder
         MarlinPlayerCount = Create(200503, true, CustomOptionType.Impostor, "MarlinSettingPlayerCountName", CrewPlayers[0], CrewPlayers[1], CrewPlayers[2], CrewPlayers[3], AssassinAndMarlinOption);
         MarlinViewVote = Create(200504, true, CustomOptionType.Impostor, "GodViewVoteSetting", false, AssassinAndMarlinOption);
 
-        PenguinOption = SetupCustomRoleOption(200600, false, RoleId.Penguin);
-        PenguinPlayerCount = Create(200601, false, CustomOptionType.Impostor, "SettingPlayerCountName", ImpostorPlayers[0], ImpostorPlayers[1], ImpostorPlayers[2], ImpostorPlayers[3], PenguinOption);
+        PenguinOption = SetupCustomRoleOption(200600, true, RoleId.Penguin);
+        PenguinPlayerCount = Create(200601, true, CustomOptionType.Impostor, "SettingPlayerCountName", ImpostorPlayers[0], ImpostorPlayers[1], ImpostorPlayers[2], ImpostorPlayers[3], PenguinOption);
         PenguinCoolTime = Create(200602, false, CustomOptionType.Impostor, "NiceScientistCooldownSetting", 30f, 2.5f, 60f, 2.5f, PenguinOption, format: "unitSeconds");
-        PenguinDurationTime = Create(200603, false, CustomOptionType.Impostor, "NiceScientistDurationSetting", 10f, 2.5f, 30f, 2.5f, PenguinOption, format: "unitSeconds");
+        PenguinDurationTime = Create(200603, true, CustomOptionType.Impostor, "NiceScientistDurationSetting", 10f, 2.5f, 30f, 2.5f, PenguinOption, format: "unitSeconds");
         PenguinCanDefaultKill = Create(200604, false, CustomOptionType.Impostor, "PenguinCanDefaultKill", false, PenguinOption);
-        PenguinMeetingKill = Create(200605, false, CustomOptionType.Impostor, "PenguinMeetingKill", true, PenguinOption);
+        PenguinMeetingKill = Create(200605, true, CustomOptionType.Impostor, "PenguinMeetingKill", true, PenguinOption);
 
         DoppelgangerOption = SetupCustomRoleOption(200700, true, RoleId.Doppelganger);
         DoppelgangerPlayerCount = Create(200701, true, CustomOptionType.Impostor, "SettingPlayerCountName", ImpostorPlayers[0], ImpostorPlayers[1], ImpostorPlayers[2], ImpostorPlayers[3], DoppelgangerOption);
@@ -1589,9 +1589,10 @@ public class CustomOptionHolder
 
         Moira.SetupCustomOptions();
 
-        // SetupNeutralCustomOptions // [ ]MEMO:第三陣営
+        // SetupNeutralCustomOptions
 
         /* |: ========================= Crewmate Settings ========================== :| */
+
         SheriffOption = SetupCustomRoleOption(400000, true, RoleId.Sheriff);
         SheriffPlayerCount = Create(400001, true, CustomOptionType.Crewmate, "SettingPlayerCountName", CrewPlayers[0], CrewPlayers[1], CrewPlayers[2], CrewPlayers[3], SheriffOption);
         SheriffCoolTime = Create(400002, true, CustomOptionType.Crewmate, "SheriffCooldownSetting", 30f, 2.5f, 60f, 2.5f, SheriffOption, format: "unitSeconds");
@@ -1648,6 +1649,8 @@ public class CustomOptionHolder
         WiseMan.SetupCustomOptions();
 
         Pteranodon.SetupCustomOptions();
+
+        JumpDancer.SetupCustomOptions();
 
         Balancer.SetupCustomOptions();
 
@@ -1838,6 +1841,7 @@ public class CustomOptionHolder
         CelebrityChangeRoleView = Create(402402, true, CustomOptionType.Crewmate, "CelebrityChangeRoleViewSetting", false, CelebrityOption);
         CelebrityIsTaskPhaseFlash = Create(402403, false, CustomOptionType.Crewmate, "CelebrityIsTaskPhaseFlashSetting", false, CelebrityOption);
         CelebrityIsFlashWhileAlivingOnly = Create(402404, false, CustomOptionType.Crewmate, "CelebrityIsFlashWhileAlivingOnly", false, CelebrityIsTaskPhaseFlash);
+
 
         ToiletFanOption = SetupCustomRoleOption(405900, true, RoleId.ToiletFan);
         ToiletFanPlayerCount = Create(405901, true, CustomOptionType.Crewmate, "SettingPlayerCountName", CrewPlayers[0], CrewPlayers[1], CrewPlayers[2], CrewPlayers[3], ToiletFanOption);
@@ -2093,4 +2097,3 @@ public class CustomOptionHolder
     }
     private static int GetRoleSettingid(int maxId) => maxId / 100;
 }
-
