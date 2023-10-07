@@ -4,6 +4,7 @@ using System.Linq;
 using AmongUs.GameOptions;
 using HarmonyLib;
 using SuperNewRoles.CustomObject;
+using SuperNewRoles.MapCustoms;
 using SuperNewRoles.Patches;
 using SuperNewRoles.Replay;
 using SuperNewRoles.Roles.Attribute;
@@ -45,8 +46,8 @@ public static class RoleClass
         IsMeeting = false;
         IsFirstMeetingEnd = false;
         IsfirstResetCool = true;
-        RandomSpawn.IsFirstSpawn = true;
         DeadPlayer.ClearAndReloads();
+        ReportDeadBodyPatch.ClearAndReloads();
         AllRoleSetClass.Assigned = false;
         LateTask.Tasks = new();
         LateTask.AddTasks = new();
@@ -68,10 +69,11 @@ public static class RoleClass
         Mode.BattleRoyal.Main.VentData = new();
         FinalStatusPatch.FinalStatusData.ClearFinalStatusData();
         Mode.ModeHandler.ClearAndReload();
-        MapCustoms.MapCustomClearAndReload.ClearAndReload();
-        MapCustoms.AdditionalVents.ClearAndReload();
-        MapCustoms.SpecimenVital.ClearAndReload();
-        MapCustoms.MoveElecPad.ClearAndReload();
+        MapCustomClearAndReload.ClearAndReload();
+        AdditionalVents.ClearAndReload();
+        SpecimenVital.ClearAndReload();
+        MoveElecPad.ClearAndReload();
+        AirShipRandomSpawn.ClearAndReload();
         Beacon.ClearBeacons();
         MeetingHudUpdatePatch.ErrorNames = new();
         FixSabotage.ClearAndReload();
@@ -253,6 +255,11 @@ public static class RoleClass
         MadRaccoon.RoleData.ClearAndReload();
         Moira.ClearAndReload();
         JumpDancer.ClearAndReload();
+        Sauner.RoleData.ClearAndReload();
+        Rocket.RoleData.ClearAndReload();
+        WellBehaver.ClearAndReload();
+        Pokerface.RoleData.ClearAndReload();
+        Crook.RoleData.ClearAndReload();
         // ロールクリア
         Quarreled.ClearAndReload();
         Lovers.ClearAndReload();
@@ -1558,8 +1565,8 @@ public static class RoleClass
         public static float KillDelay;
         public static float Timer;
         public static DateTime KillTimer;
-        public static Dictionary<PlayerControl, PlayerControl> Targets;
-        public static Dictionary<byte, List<BloodStain>> BloodStains;
+        public static PlayerData<PlayerControl> Targets;
+        public static PlayerData<List<BloodStain>> BloodStains;
         public static List<BloodStain> WaitActiveBloodStains;
         public static Dictionary<List<BloodStain>, int> NoActiveTurnWait;
         public static bool CreatedDependents;
@@ -1583,7 +1590,7 @@ public static class RoleClass
         public static List<PlayerControl> FoxPlayer;
         public static Color32 color = FoxPurple;
         public static Dictionary<int, int> KillGuard;
-        public static Dictionary<byte, bool> Killer;
+        public static PlayerData< bool> Killer;
         public static bool IsUseVent;
         public static bool UseReport;
         public static bool IsImpostorLight;
@@ -1724,7 +1731,7 @@ public static class RoleClass
     public static class Demon
     {
         public static List<PlayerControl> DemonPlayer;
-        public static Dictionary<byte, List<PlayerControl>> CurseData;
+        public static PlayerData< List<PlayerControl>> CurseData;
         public static Color32 color = new(110, 0, 165, byte.MaxValue);
         public static bool IsUseVent;
         public static bool IsCheckImpostor;
@@ -1735,7 +1742,7 @@ public static class RoleClass
         public static void ClearAndReload()
         {
             DemonPlayer = new();
-            CurseData = new Dictionary<byte, List<PlayerControl>>();
+            CurseData = new(defaultvalue:new());
             IsUseVent = CustomOptionHolder.DemonIsUseVent.GetBool();
             CoolTime = CustomOptionHolder.DemonCoolTime.GetFloat();
             IsCheckImpostor = CustomOptionHolder.DemonIsCheckImpostor.GetBool();
@@ -1860,7 +1867,7 @@ public static class RoleClass
     public static class Arsonist
     {
         public static List<PlayerControl> ArsonistPlayer;
-        public static Dictionary<byte, List<PlayerControl>> DouseData;
+        public static PlayerData< List<PlayerControl>> DouseData;
         public static Color32 color = new(238, 112, 46, byte.MaxValue);
         public static bool IsUseVent;
         public static float CoolTime;
@@ -1875,7 +1882,7 @@ public static class RoleClass
         public static void ClearAndReload()
         {
             ArsonistPlayer = new();
-            DouseData = new Dictionary<byte, List<PlayerControl>>();
+            DouseData = new(defaultvalue:new());
             IsUseVent = CustomOptionHolder.ArsonistIsUseVent.GetBool();
             CoolTime = CustomOptionHolder.ArsonistCoolTime.GetFloat();
             DurationTime = CustomOptionHolder.ArsonistDurationTime.GetFloat();
@@ -1998,7 +2005,7 @@ public static class RoleClass
     {
         public static List<PlayerControl> VentMakerPlayer;
         public static Color32 color = ImpostorRed;
-        public static Dictionary<byte, Vent> Vent;
+        public static PlayerData< Vent> Vent;
         public static int VentCount;
         public static bool IsMakeVent;
         public static Sprite GetButtonSprite() => ModHelpers.LoadSpriteFromResources("SuperNewRoles.Resources.VentMakerButton.png", 115f);
@@ -2030,6 +2037,15 @@ public static class RoleClass
         public static Color32 color = ImpostorRed;
         public static bool IsCreateMadmate;
         public static float Cooldown;
+        /// <summary>アドミン上でインポスターのマークが赤く見えるかどうか</summary>
+        public static bool CanSeeImpostorPositions;
+        /// <summary>アドミン上で死体のマークが青く見えるかどうか</summary>
+        public static bool CanSeeDeadBodyPositions;
+        public static bool CanUseAdminDuringMeeting;
+        /// <summary>サボタージュマップにアドミンが表示されるかどうか</summary>
+        public static bool SabotageMapShowsAdmin;
+        /// <summary>アドミンにドアの開閉状況が表示される</summary>
+        public static bool MapShowsDoorState;
         public static bool IsMyAdmin;
         public static Sprite GetCreateMadmateButtonSprite() => ModHelpers.LoadSpriteFromResources("SuperNewRoles.Resources.CreateMadmateButton.png", 115f);
 
@@ -2046,6 +2062,12 @@ public static class RoleClass
         {
             EvilHackerPlayer = new();
             IsCreateMadmate = CustomOptionHolder.EvilHackerMadmateSetting.GetBool();
+            var hasEnhancedAdmin = CustomOptionHolder.EvilHackerHasEnhancedAdmin.GetBool();
+            CanSeeImpostorPositions = hasEnhancedAdmin && CustomOptionHolder.EvilHackerCanSeeImpostorPositions.GetBool();
+            CanSeeDeadBodyPositions = hasEnhancedAdmin && CustomOptionHolder.EvilHackerCanSeeDeadBodyPositions.GetBool();
+            CanUseAdminDuringMeeting = CustomOptionHolder.EvilHackerCanUseAdminDuringMeeting.GetBool();
+            SabotageMapShowsAdmin = CustomOptionHolder.EvilHackerSabotageMapShowsAdmin.GetBool();
+            MapShowsDoorState = CustomOptionHolder.EvilHackerMapShowsDoorState.GetBool();
             IsMyAdmin = false;
             Cooldown = CustomOptionHolder.EvilHackerButtonCooldown.GetFloat();
         }
@@ -2071,11 +2093,11 @@ public static class RoleClass
     {
         public static List<PlayerControl> TunaPlayer;
         public static Color32 color = new(0, 255, 255, byte.MaxValue);
-        public static Dictionary<byte, Vector2> Position;
+        public static PlayerData< Vector2> Position;
         public static float Timer;
         public static float StoppingTime;
         public static bool IsUseVent;
-        public static Dictionary<byte, float> Timers;
+        public static PlayerData< float> Timers;
         public static bool IsTunaAddWin;
         public static void ClearAndReload()
         {
@@ -2174,7 +2196,7 @@ public static class RoleClass
         public static Kunai Kunai;
         public static Kunai SendKunai;
         public static List<Kunai> Kunais = new();
-        public static Dictionary<byte, Dictionary<byte, int>> HitCount;
+        public static PlayerData<PlayerData<int>> HitCount;
         public static bool KunaiSend;
         public static bool HideKunai;
         public static float MouseAngle;
@@ -2325,7 +2347,7 @@ public static class RoleClass
         public static Color32 color = ImpostorRed;
         public static int CheckMadmateKillCount;
         public static int KillCount;
-        public static Dictionary<byte, int> KillCounts;
+        public static PlayerData< int> KillCounts;
         public static bool IsCheck
         {
             get
@@ -2394,7 +2416,7 @@ public static class RoleClass
         public static Color32 color = new(0, 102, 51, byte.MaxValue);
         public static int VoteCount;
         public static int SubExileLimit;
-        public static Dictionary<byte, int> SubExileLimitData;
+        public static PlayerData< int> SubExileLimitData;
         public static void ClearAndReload()
         {
             DictatorPlayer = new();
@@ -2480,8 +2502,8 @@ public static class RoleClass
         public static float WearDefaultTime;
         public static float WearTime;
         public static float MyKillCoolTime;
-        public static bool IsLocalOn => !Data.Keys.All(data => data != CachedPlayer.LocalPlayer.PlayerId);
-        public static Dictionary<byte, DeadBody> Data;
+        public static bool IsLocalOn => Data.Local != null;
+        public static PlayerData< DeadBody> Data;
         public static Sprite PutOnButtonSprite => ModHelpers.LoadSpriteFromResources("SuperNewRoles.Resources.MatryoshkaPutOnButton.png", 115f);
         public static Sprite TakeOffButtonSprite => ModHelpers.LoadSpriteFromResources("SuperNewRoles.Resources.MatryoshkaTakeOffButton.png", 115f);
         public static void ClearAndReload()
@@ -2509,35 +2531,16 @@ public static class RoleClass
         public static Color32 color = new(0, 255, 0, byte.MaxValue);
         public static int DeathDefaultTurn;
         public static int DeathTurn;
-        public static Dictionary<byte, byte> Data;
-        public static bool IsLocalOn => Data.ContainsKey(CachedPlayer.LocalPlayer.PlayerId);
+        public static PlayerData<byte> Data;
+        public static bool IsLocalOn => Data.Local != 255;
         public static PlayerControl CurrentTarget => IsLocalOn ? ModHelpers.PlayerById(Data[CachedPlayer.LocalPlayer.PlayerId]) : null;
 
-        public static Dictionary<PlayerControl, PlayerControl> PlayerData
-        {
-            get
-            {
-                //キャッシュ済みのプレイヤーリストとplayerByIdのリストの数が違ったらキャッシュを更新する
-                if (_playerData.Count != Data.Count)
-                {
-                    Dictionary<PlayerControl, PlayerControl> newdic = new();
-                    foreach (var data in Data)
-                    {
-                        newdic.Add(ModHelpers.PlayerById(data.Key), ModHelpers.PlayerById(data.Value));
-                    }
-                    _playerData = newdic;
-                }
-                return _playerData;
-            }
-        }
-        private static Dictionary<PlayerControl, PlayerControl> _playerData;
         public static Sprite GetButtonSprite() => ModHelpers.LoadSpriteFromResources("SuperNewRoles.Resources.PartTimerButton.png", 115f);
         public static void ClearAndReload()
         {
             PartTimerPlayer = new();
             DeathTurn = DeathDefaultTurn = CustomOptionHolder.PartTimerDeathTurn.GetInt();
-            Data = new();
-            _playerData = new();
+            Data = new(defaultvalue: 255);
         }
     }
 
