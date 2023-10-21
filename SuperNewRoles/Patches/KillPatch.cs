@@ -71,7 +71,11 @@ class KillButtonDoClickPatch
             }
             if (!(__instance.currentTarget.IsRole(RoleId.Bait) || __instance.currentTarget.IsRole(RoleId.NiceRedRidingHood)) && PlayerControl.LocalPlayer.IsRole(RoleId.Vampire))
             {
-                PlayerControl.LocalPlayer.killTimer = RoleHelpers.GetCoolTime(PlayerControl.LocalPlayer);
+                PlayerControl.LocalPlayer.killTimer =
+                    RoleHelpers.GetCoolTime(
+                        PlayerControl.LocalPlayer,
+                        __instance.currentTarget
+                    );
                 RoleClass.Vampire.target = __instance.currentTarget;
                 RoleClass.Vampire.KillTimer = DateTime.Now;
                 RoleClass.Vampire.Timer = RoleClass.Vampire.KillDelay;
@@ -91,7 +95,11 @@ class KillButtonDoClickPatch
             // Handle blank kill
             if (res == MurderAttemptResult.BlankKill)
             {
-                PlayerControl.LocalPlayer.killTimer = RoleHelpers.GetCoolTime(PlayerControl.LocalPlayer);
+                PlayerControl.LocalPlayer.killTimer =
+                    RoleHelpers.GetCoolTime(
+                        PlayerControl.LocalPlayer,
+                        __instance.currentTarget
+                    );
             }
             __instance.SetTarget(null);
         }
@@ -247,7 +255,9 @@ static class CheckMurderPatch
                 Logger.Info("マッドメイトを作成しました", "FastMakerSHR");
                 return false;
             case RoleId.Jackal:
-                if (RoleClass.Jackal.CreatePlayers.Contains(__instance.PlayerId) && RoleClass.Jackal.CanCreateFriend)//まだ作ってなくて、設定が有効の時
+                //まだ作ってなくて、設定が有効の時
+                if (RoleClass.Jackal.CreatePlayers.Contains(__instance.PlayerId) ||
+                    !RoleClass.Jackal.CanCreateFriend)
                 {
                     // キルができた理由のログを表示する(此処にMurderPlayerを使用すると2回キルされる為ログのみ表示)
                     if (!RoleClass.Jackal.CanCreateFriend) Logger.Info("ジャッカルフレンズを作る設定ではない為 普通のキル", "JackalSHR");
@@ -536,6 +546,22 @@ public static class MurderPlayerPatch
             target.protectedByGuardian = true;
             return false;
         }
+        if (target.IsRole(RoleId.Frankenstein) && Frankenstein.IsMonster(target))
+        {
+            //相手がフランケン(怪物)で、自分がキルした場合
+            if (__instance.AmOwner)
+            {
+                //音を出して、キルテレポートさせる
+                if (Constants.ShouldPlaySfx()) SoundManager.Instance.PlaySound(__instance.KillSfx, false, 0.8f, null);
+                __instance.NetTransform.RpcSnapTo(target.transform.position);
+            }
+            //自分がフランケン(怪物)で、相手にキルされた場合
+            if (target.AmOwner)
+            {
+                Frankenstein.OnMurderMonster(target);
+            }
+            return false;
+        }
         if (target.IsRole(RoleId.WiseMan) && WiseMan.WiseManData.ContainsKey(target.PlayerId) && WiseMan.WiseManData[target.PlayerId] is not null)
         {
             WiseMan.WiseManData[target.PlayerId] = null;
@@ -669,7 +695,9 @@ public static class MurderPlayerPatch
                 }
 
                 if (__instance.IsImpostor())
-                    PlayerControl.LocalPlayer.SetKillTimerUnchecked(RoleHelpers.GetCoolTime(__instance), RoleHelpers.GetCoolTime(__instance));
+                    PlayerControl.LocalPlayer.SetKillTimerUnchecked(
+                        RoleHelpers.GetCoolTime(__instance, target), RoleHelpers.GetCoolTime(__instance, target)
+                        );
 
                 if (PlayerControl.LocalPlayer.IsRole(RoleId.Slugger)) // キルクリセット処理
                 {
@@ -834,6 +862,22 @@ public static class MurderPlayerPatch
                     case RoleId.Psychometrist:
                         Psychometrist.MurderPlayer(__instance, target);
                         break;
+                }
+                if (__instance.IsRole(RoleId.Frankenstein) && Frankenstein.IsMonster(__instance))
+                {
+                    //一応会議中に死んだ時とかは蘇らないようにしておく
+                    if (!RoleClass.IsMeeting)
+                    {
+                        new LateTask(() =>
+                        {
+                            MessageWriter writer = RPCHelper.StartRPC(CustomRPC.ReviveRPC);
+                            writer.Write(__instance.PlayerId);
+                            writer.EndRPC();
+                            RPCProcedure.ReviveRPC(__instance.PlayerId);
+                        }, 0.1f, "Revive Frankenstein");
+                    }
+                    if (__instance.AmOwner)
+                        Frankenstein.OnMurderMonster(__instance);
                 }
                 if (RoleClass.Lovers.SameDie &&
                     target.IsLovers() &&
