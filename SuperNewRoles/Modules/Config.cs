@@ -13,12 +13,12 @@ public static class ConfigRoles
     public static ConfigEntry<bool> AutoUpdate { get; set; }
     public static ConfigEntry<bool> AutoCopyGameCode { get; set; }
     public static ConfigEntry<bool> DebugMode { get; set; }
+    public static ConfigEntry<bool> IsSaveLogWhenEndGame { get; set; }
     public static ConfigEntry<bool> CustomProcessDown { get; set; }
     public static ConfigEntry<bool> IsVersionErrorView { get; set; }
     public static ConfigEntry<bool> IsShareCosmetics { get; set; }
     public static ConfigEntry<string> ShareCosmeticsNamePlatesURL { get; set; }
     public static ConfigEntry<bool> IsAutoRoomCreate { get; set; }
-    public static ConfigEntry<bool> HideTaskArrows { get; set; }
     public static ConfigEntry<bool> EnableHorseMode { get; set; }
     public static ConfigEntry<bool> IsModCosmeticsAreNotLoaded { get; set; }
     public static ConfigEntry<bool> IsNotUsingBlood { get; set; }
@@ -45,10 +45,10 @@ public static class ConfigRoles
         StreamerMode = SuperNewRolesPlugin.Instance.Config.Bind("Custom", "Enable Streamer Mode", false);
         AutoUpdate = SuperNewRolesPlugin.Instance.Config.Bind("Custom", "Auto Update", true);
         DebugMode = SuperNewRolesPlugin.Instance.Config.Bind("Custom", "Debug Mode", false);
+        IsSaveLogWhenEndGame = SuperNewRolesPlugin.Instance.Config.Bind("Custom", "IsSaveLogWhenEndGame", false, "At the end of the match, a copy of the log that is being written is made.");
         AutoCopyGameCode = SuperNewRolesPlugin.Instance.Config.Bind("Custom", "Auto Copy Game Code", true);
         CustomProcessDown = SuperNewRolesPlugin.Instance.Config.Bind("Custom", "CustomProcessDown", false);
         IsVersionErrorView = SuperNewRolesPlugin.Instance.Config.Bind("Custom", "IsVersionErrorView", true);
-        HideTaskArrows = SuperNewRolesPlugin.Instance.Config.Bind("Custom", "HideTaskArrows", false);
         ShareCosmeticsNamePlatesURL = SuperNewRolesPlugin.Instance.Config.Bind("ShareCosmetics", "NamePlateURL", "");
         IsAutoRoomCreate = SuperNewRolesPlugin.Instance.Config.Bind("Custom", "AutoRoomCreate", true);
         EnableHorseMode = SuperNewRolesPlugin.Instance.Config.Bind("Custom", "EnableHorseMode", false);

@@ -66,7 +66,7 @@ class ControllerManagerUpdatePatch
         // その時点までのlogを切り出す
         if (ModHelpers.GetManyKeyDown(new[] { KeyCode.S, KeyCode.LeftShift, KeyCode.RightShift }))
         {
-            string via = "KeyCommandVia";
+            string via = "KeyCmdVia";
             LoggerPlus.SaveLog(via, via);
         }
 
@@ -121,7 +121,7 @@ class ControllerManagerUpdatePatch
 
                 bot.NetTransform.SnapTo(PlayerControl.LocalPlayer.transform.position);
                 //new LateTask(() => bot.NetTransform.RpcSnapTo(new Vector2(0, 15)), 0.2f, "Bot TP Task");
-                //new LateTask(() => { foreach (var pc in CachedPlayer.AllPlayers) pc.PlayerControl.RpcMurderPlayer(bot); }, 0.4f, "Bot Kill Task");
+                //new LateTask(() => { foreach (var pc in CachedPlayer.AllPlayers.AsSpan()) pc.PlayerControl.RpcMurderPlayer(bot); }, 0.4f, "Bot Kill Task");
                 //new LateTask(() => bot.Despawn(), 0.6f, "Bot Despawn Task");
             }
 

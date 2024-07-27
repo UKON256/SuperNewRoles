@@ -916,7 +916,7 @@ public class CustomOptionHolder
     {
         List<string> leveData = new() { "optionOff", "LevelingerSettingKeep", "PursuerName", "TeleporterName", "SidekickName", "SpeedBoosterName", "MovingName" };
         List<string> LeveTransed = new();
-        foreach (string data in leveData)
+        foreach (string data in leveData.AsSpan())
         {
             LeveTransed.Add(ModTranslation.GetString(data));
         }
@@ -984,11 +984,11 @@ public class CustomOptionHolder
 
         ShiftActor.SetupCustomOptions();
 
-        AssassinAndMarlinOption = new(200500, true, CustomOptionType.Impostor, "AssassinAndMarlinName", Color.white, 1, role: RoleId.Assassin);
-        AssassinPlayerCount = Create(200501, true, CustomOptionType.Impostor, "AssassinSettingPlayerCountName", ImpostorPlayers[0], ImpostorPlayers[1], ImpostorPlayers[2], ImpostorPlayers[3], AssassinAndMarlinOption);
-        AssassinViewVote = Create(200502, true, CustomOptionType.Impostor, "GodViewVoteSetting", false, AssassinAndMarlinOption);
-        MarlinPlayerCount = Create(200503, true, CustomOptionType.Impostor, "MarlinSettingPlayerCountName", CrewPlayers[0], CrewPlayers[1], CrewPlayers[2], CrewPlayers[3], AssassinAndMarlinOption);
-        MarlinViewVote = Create(200504, true, CustomOptionType.Impostor, "GodViewVoteSetting", false, AssassinAndMarlinOption);
+        AssassinAndMarlinOption = new(200500, false, CustomOptionType.Impostor, "AssassinAndMarlinName", Color.white, 1, role: RoleId.Assassin);
+        AssassinPlayerCount = Create(200501, false, CustomOptionType.Impostor, "AssassinSettingPlayerCountName", ImpostorPlayers[0], ImpostorPlayers[1], ImpostorPlayers[2], ImpostorPlayers[3], AssassinAndMarlinOption);
+        AssassinViewVote = Create(200502, false, CustomOptionType.Impostor, "GodViewVoteSetting", false, AssassinAndMarlinOption);
+        MarlinPlayerCount = Create(200503, false, CustomOptionType.Impostor, "MarlinSettingPlayerCountName", CrewPlayers[0], CrewPlayers[1], CrewPlayers[2], CrewPlayers[3], AssassinAndMarlinOption);
+        MarlinViewVote = Create(200504, false, CustomOptionType.Impostor, "GodViewVoteSetting", false, AssassinAndMarlinOption);
 
         PenguinOption = SetupCustomRoleOption(200600, true, RoleId.Penguin);
         PenguinPlayerCount = Create(200601, true, CustomOptionType.Impostor, "SettingPlayerCountName", ImpostorPlayers[0], ImpostorPlayers[1], ImpostorPlayers[2], ImpostorPlayers[3], PenguinOption);
@@ -1376,7 +1376,7 @@ public class CustomOptionHolder
 
         AmnesiacOption = SetupCustomRoleOption(301600, true, RoleId.Amnesiac);
         AmnesiacPlayerCount = Create(301601, true, CustomOptionType.Neutral, "SettingPlayerCountName", CrewPlayers[0], CrewPlayers[1], CrewPlayers[2], CrewPlayers[3], AmnesiacOption);
-        AmnesiacShowArrows = Create(301602, true, CustomOptionType.Neutral, "VultureShowArrowsSetting", true, AmnesiacOption);
+        AmnesiacShowArrows = Create(301602, false, CustomOptionType.Neutral, "VultureShowArrowsSetting", true, AmnesiacOption);
 
         TheThreeLittlePigs.SetupCustomOptions();
 
@@ -1792,8 +1792,8 @@ public class CustomOptionHolder
         NiceHawkCoolTime = Create(404902, false, CustomOptionType.Crewmate, "HawkCoolTimeSetting", 15f, 0f, 120f, 2.5f, NiceHawkOption, format: "unitCouples");
         NiceHawkDurationTime = Create(404903, false, CustomOptionType.Crewmate, "HawkDurationTimeSetting", 5f, 0f, 60f, 0.5f, NiceHawkOption, format: "unitCouples");
 
-        BakeryOption = SetupCustomRoleOption(405000, true, RoleId.Bakery);
-        BakeryPlayerCount = Create(405001, true, CustomOptionType.Crewmate, "SettingPlayerCountName", CrewPlayers[0], CrewPlayers[1], CrewPlayers[2], CrewPlayers[3], BakeryOption);
+        BakeryOption = SetupCustomRoleOption(405000, false, RoleId.Bakery);
+        BakeryPlayerCount = Create(405001, false, CustomOptionType.Crewmate, "SettingPlayerCountName", CrewPlayers[0], CrewPlayers[1], CrewPlayers[2], CrewPlayers[3], BakeryOption);
 
         NiceTeleporterOption = SetupCustomRoleOption(405100, false, RoleId.NiceTeleporter);
         NiceTeleporterPlayerCount = Create(405101, false, CustomOptionType.Crewmate, "SettingPlayerCountName", CrewPlayers[0], CrewPlayers[1], CrewPlayers[2], CrewPlayers[3], NiceTeleporterOption);
@@ -1939,7 +1939,7 @@ public class CustomOptionHolder
 
         if (GameOptionsMenuUpdatePatch.HasSealingOption)
         {
-            foreach (CustomOption option in options)
+            foreach (CustomOption option in options.AsSpan())
             {
                 if (option.RoleId is RoleId.DefaultRole or RoleId.None) continue; // 役職以外はスキップ
                 if (Roles.Role.RoleInfoManager.GetRoleInfo(option.RoleId) == null) continue; // GetOptionInfoでlogを出さない様 RoleBase未移行役は先にスキップする。

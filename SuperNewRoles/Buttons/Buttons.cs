@@ -381,7 +381,7 @@ static class HudManagerStartPatch
                     if (RoleClass.LoversBreaker.BreakCount <= 0)
                     {
                         bool IsAliveLovers = false;
-                        foreach (PlayerControl p in PlayerControl.AllPlayerControls)
+                        foreach (PlayerControl p in CachedPlayer.AllPlayers.AsSpan())
                         {
                             if (p.IsAlive() && (p.IsLovers() || p.IsRole(RoleId.truelover) || (p.TryGetRoleBase<Cupid>(out Cupid cupid) & cupid.Created)))
                             {
@@ -1077,7 +1077,10 @@ static class HudManagerStartPatch
             {
                 if (PlayerControlFixedUpdatePatch.JackalSetTarget() && RoleHelpers.IsAlive(PlayerControl.LocalPlayer) && PlayerControl.LocalPlayer.CanMove)
                 {
-                    ModHelpers.CheckMurderAttemptAndKill(PlayerControl.LocalPlayer, PlayerControlFixedUpdatePatch.JackalSetTarget());
+                    if (ModeHandler.IsMode(ModeId.SuperHostRoles))
+                        PlayerControl.LocalPlayer.CmdCheckMurder(PlayerControlFixedUpdatePatch.JackalSetTarget());
+                    else
+                        ModHelpers.CheckMurderAttemptAndKill(PlayerControl.LocalPlayer, PlayerControlFixedUpdatePatch.JackalSetTarget());
                     switch (PlayerControl.LocalPlayer.GetRole())
                     {
                         case RoleId.JackalSeer:
@@ -1099,7 +1102,7 @@ static class HudManagerStartPatch
                     }
                 }
             },
-            (bool isAlive, RoleId role) => { return isAlive && (role is RoleId.TeleportingJackal or RoleId.JackalSeer || (PlayerControl.LocalPlayer.GetRoleBase() is IJackal jackal && jackal.CanUseKill && jackal.isShowKillButton)) && ModeHandler.IsMode(ModeId.Default); },
+            (bool isAlive, RoleId role) => { return isAlive && (role is RoleId.TeleportingJackal or RoleId.JackalSeer || (PlayerControl.LocalPlayer.GetRoleBase() is IJackal jackal && jackal.CanUseKill && jackal.isShowKillButton)); },
             () =>
             {
                 return PlayerControlFixedUpdatePatch.JackalSetTarget() && PlayerControl.LocalPlayer.CanMove;

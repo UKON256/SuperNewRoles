@@ -14,14 +14,14 @@ public static class HideChat
     public static bool CanSerializeGameData => !HideChatEnabled || SerializeByHideChat || !RoleClass.IsMeeting;
     public static void OnStartMeeting()
     {
-        _ = new LateTask(() => DesyncSetDead(), 1.5f);
+        _ = new LateTask(() => DesyncSetDead(), 4.5f);
         _ = new LateTask(() => DesyncSetDead(), 6.5f);
     }
     public static void DesyncSetDead(CustomRpcSender? sender, NetworkedPlayerInfo target)
     {
         AliveState State = new(target);
         target.IsDead = true;
-        foreach (PlayerControl player in PlayerControl.AllPlayerControls)
+        foreach (PlayerControl player in CachedPlayer.AllPlayers.AsSpan())
         {
             if (player == null ||
                 player.Data.IsDead ||
@@ -44,11 +44,11 @@ public static class HideChat
     private static void DesyncSetDead()
     {
         PlayerData<AliveState> AliveStates = new();
-        foreach (PlayerControl player in PlayerControl.AllPlayerControls)
+        foreach (PlayerControl player in CachedPlayer.AllPlayers.AsSpan())
         {
             AliveStates[player.PlayerId] = new(player.Data);
         }
-        foreach (PlayerControl player in PlayerControl.AllPlayerControls)
+        foreach (PlayerControl player in CachedPlayer.AllPlayers.AsSpan())
         {
             if (AliveStates[player] == null ||
                 AliveStates[player].IsDead ||
@@ -56,7 +56,7 @@ public static class HideChat
                 continue;
             if (player.PlayerId == PlayerControl.LocalPlayer.PlayerId) continue;
             if (player.IsMod()) continue;
-            foreach (PlayerControl player2 in PlayerControl.AllPlayerControls)
+            foreach (PlayerControl player2 in CachedPlayer.AllPlayers.AsSpan())
             {
                 player2.Data.IsDead = true;
             }
@@ -67,7 +67,7 @@ public static class HideChat
             RPCHelper.RpcSyncAllNetworkedPlayer(player.GetClientId());
             SerializeByHideChat = false;
         }
-        foreach (PlayerControl player in PlayerControl.AllPlayerControls)
+        foreach (PlayerControl player in CachedPlayer.AllPlayers.AsSpan())
         {
             player.Data.IsDead = AliveStates[player.PlayerId].IsDead;
             player.Data.Disconnected = AliveStates[player.PlayerId].Disconnected;
@@ -75,7 +75,7 @@ public static class HideChat
     }
     public static void OnAddChat(PlayerControl player, string message, bool isAdd)
     {
-        if (!RoleClass.IsMeeting || !HideChatEnabled || player.IsDead())
+        if (!RoleClass.IsMeeting || !HideChatEnabled || player.IsDead() || AmongUsClient.Instance.GameState != InnerNet.InnerNetClient.GameStates.Started)
             return;
         CustomRpcSender sender = new("HideChatSender", sendOption: Hazel.SendOption.Reliable, false);
         OnAddChat(sender, player, message, isAdd);
@@ -83,7 +83,7 @@ public static class HideChat
     }
     public static void OnAddChat(CustomRpcSender sender, PlayerControl player, string message, bool isAdd)
     {
-        if (!RoleClass.IsMeeting || !HideChatEnabled || player.IsDead())
+        if (!RoleClass.IsMeeting || !HideChatEnabled || player.IsDead() || AntiBlackOut.GamePlayers != null)
             return;
         if (isAdd)
         {
@@ -92,7 +92,7 @@ public static class HideChat
             SerializeByHideChat = true;
             RPCHelper.RpcSyncNetworkedPlayer(sender, player.Data);
             SerializeByHideChat = false;
-            foreach (PlayerControl target in PlayerControl.AllPlayerControls)
+            foreach (PlayerControl target in CachedPlayer.AllPlayers.AsSpan())
             {
                 if (player == target || target.IsDead())
                     continue;

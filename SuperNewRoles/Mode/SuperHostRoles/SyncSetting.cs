@@ -261,6 +261,9 @@ public static class SyncSetting
         if (isCooldownTwice)
             optdata.SetFloat(FloatOptionNames.KillCooldown, optdata.GetFloat(FloatOptionNames.KillCooldown) * 2f);
 
+        if (optdata.GetInt(Int32OptionNames.NumEmergencyMeetings) != player.RemainingEmergencies)
+            optdata.SetInt(Int32OptionNames.NumEmergencyMeetings, player.RemainingEmergencies);
+
         if (player.AmOwner) GameManager.Instance.LogicOptions.SetGameOptions(optdata);
         else optdata.RpcSyncOption(sender, player.GetClientId());
         OptionDatas[player] = optdata.DeepCopy();
@@ -328,7 +331,7 @@ public static class SyncSetting
         string callerMethodName = callerMethod.Name;
         string callerClassName = callerMethod.DeclaringType.FullName;
         SuperNewRolesPlugin.Logger.LogInfo("[SHR:SyncSettings] CustomSyncSettingsが" + callerClassName + "." + callerMethodName + "から呼び出されました。");
-        foreach (PlayerControl p in CachedPlayer.AllPlayers)
+        foreach (PlayerControl p in CachedPlayer.AllPlayers.AsSpan())
         {
             if (!p.Data.Disconnected && !p.IsBot())
             {

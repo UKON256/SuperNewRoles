@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Epic.OnlineServices.Presence;
 using HarmonyLib;
 using TMPro;
 using UnityEngine;
@@ -17,14 +18,37 @@ public static class ClientModOptionsPatch
             new("CustomAutoUpdate", () => ConfigRoles.AutoUpdate.Value = !ConfigRoles.AutoUpdate.Value, ConfigRoles.AutoUpdate.Value),
             new("CustomAutoCopyGameCode", () => ConfigRoles.AutoCopyGameCode.Value = !ConfigRoles.AutoCopyGameCode.Value, ConfigRoles.AutoCopyGameCode.Value),
             new("CustomIsVersionErrorView", () => ConfigRoles.IsVersionErrorView.Value = !ConfigRoles.IsVersionErrorView.Value, ConfigRoles.IsVersionErrorView.Value),
-            new("CustomHideTaskArrows", () => TasksArrowsOption.hideTaskArrows = ConfigRoles.HideTaskArrows.Value = !ConfigRoles.HideTaskArrows.Value, ConfigRoles.HideTaskArrows.Value),
             new("IsModCosmeticsAreNotLoaded", () => ConfigRoles.IsModCosmeticsAreNotLoaded.Value = !ConfigRoles.IsModCosmeticsAreNotLoaded.Value, ConfigRoles.IsModCosmeticsAreNotLoaded.Value),
             new("IsNotUsingBlood", () => ConfigRoles.IsNotUsingBlood.Value = !ConfigRoles.IsNotUsingBlood.Value, ConfigRoles.IsNotUsingBlood.Value),
             new("IsSendAnalytics", () => ConfigRoles.IsSendAnalytics.Value = !ConfigRoles.IsSendAnalytics.Value, ConfigRoles.IsSendAnalytics.Value),
             new("IsLightAndDarker", () => ConfigRoles.IsLightAndDarker.Value = !ConfigRoles.IsLightAndDarker.Value, ConfigRoles.IsLightAndDarker.Value),
-            new("ReplayOptions", OpenReplayWindow, true),
+            // new("ReplayOptions", OpenReplayWindow, true),
             new("IsMuteLobbyBGM", () => ConfigRoles.IsMuteLobbyBGM.Value = !ConfigRoles.IsMuteLobbyBGM.Value, ConfigRoles.IsMuteLobbyBGM.Value),
+            new("IsSaveLogWhenEndGame", () => ConfigRoles.IsSaveLogWhenEndGame.Value = !ConfigRoles.IsSaveLogWhenEndGame.Value, ConfigRoles.IsSaveLogWhenEndGame.Value),
+            new(ProcessorAffinityMaskTitle, OnProcessorAffinityMaskClick, ConfigRoles._ProcessorAffinityMask.Value == 3),
     };
+    private static bool OnProcessorAffinityMaskClick(SelectionBehaviour button)
+    {
+        ConfigRoles._ProcessorAffinityMask.Value = ConfigRoles._ProcessorAffinityMask.Value == (ulong)3 ? (ulong)1 : (ulong)3;
+        SuperNewRolesPlugin.UpdateCPUProcessorAffinity();
+        button.Title = ProcessorAffinityMaskTitle;
+        return ConfigRoles._ProcessorAffinityMask.Value == (ulong)3;
+    }
+    private static string ProcessorAffinityMaskTitle
+    {
+        get
+        {
+            ulong mask = ConfigRoles._ProcessorAffinityMask.Value;
+            string showCore = "1";
+            if (mask == (ulong)1)
+                showCore = "1";
+            else if (mask == (ulong)3)
+                showCore = "2";
+            else
+                showCore = "?";
+            return $"{ModTranslation.GetString("ProcessorAffinityMask")} {showCore} {ModTranslation.GetString("ProcessorAffinityMaskCoreName")}";
+        }
+    }
     private static GameObject popUp;
     private static TextMeshPro titleText;
 
@@ -218,6 +242,7 @@ public static class ClientModOptionsPatch
             {
                 button.onState = info.OnClick();
                 button.Background.color = button.onState ? Color.green : Palette.ImpostorRed;
+                button.Text.text = ModTranslation.GetString(info.Title);
             }));
 
             passiveButton.OnMouseOver.AddListener((Action)(() => button.Background.color = new Color32(34, 139, 34, byte.MaxValue)));
@@ -237,7 +262,7 @@ public static class ClientModOptionsPatch
         button.Background.color = button.onState ? Color.green : Palette.ImpostorRed;
     }
     public static List<SelectionBehaviour> ReplayOptions = new() { new SelectionBehaviour("リプレイを収録する",()=>{
-        foreach (GameObject obj in ReplayEnableObjects)
+        foreach (GameObject obj in ReplayEnableObjects.AsSpan())
         {
             obj.SetActive(!ConfigRoles.ReplayEnable.Value);
         }
@@ -312,6 +337,7 @@ public static class ClientModOptionsPatch
             passiveButton.OnClick.AddListener((Action)(() =>
             {
                 UpdateState(button, info.OnClick());
+                button.Text.text = ModTranslation.GetString(info.Title);
             }));
 
             passiveButton.OnMouseOver.AddListener((Action)(() => button.Background.color = new Color32(34, 139, 34, byte.MaxValue)));
@@ -324,7 +350,7 @@ public static class ClientModOptionsPatch
             if (i > 0)
                 ReplayEnableObjects.Add(button.gameObject);
         }
-        foreach (GameObject obj in ReplayEnableObjects)
+        foreach (GameObject obj in ReplayEnableObjects.AsSpan())
         {
             obj.SetActive(ConfigRoles.ReplayEnable.Value);
         }
@@ -365,6 +391,14 @@ public static class ClientModOptionsPatch
         {
             Title = title;
             OnClick = onClick;
+            DefaultValue = defaultValue;
+            this.pos = pos;
+            this.scale = scale;
+        }
+        public SelectionBehaviour(string title, Func<SelectionBehaviour, bool> onClick, bool defaultValue, Vector3? pos = null, Vector3? scale = null)
+        {
+            Title = title;
+            OnClick = () => onClick(this);
             DefaultValue = defaultValue;
             this.pos = pos;
             this.scale = scale;

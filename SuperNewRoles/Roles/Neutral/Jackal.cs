@@ -39,6 +39,7 @@ public class Jackal : RoleBase, INeutral, IJackal, IRpcHandler, IFixedUpdaterAll
     public bool CanUseSabo => Optioninfo.CanUseSabo;
     public bool CanUseVent => Optioninfo.CanUseVent;
     public bool IsImpostorVision => Optioninfo.IsImpostorVision;
+    public bool HasKillButtonClient => false;
 
     public static CustomOption JackalKillCooldown;
     public static CustomOption JackalCreateFriend;
@@ -62,7 +63,7 @@ public class Jackal : RoleBase, INeutral, IJackal, IRpcHandler, IFixedUpdaterAll
         JackalSKCooldown = CustomOption.Create(Optioninfo.OptionId++, Optioninfo.SupportSHR, Optioninfo.RoleOption.type,
             "PavlovsownerCreateDogCoolTime", 30f, 2.5f, 60f, 2.5f, JackalCreateSidekick, format: "unitSeconds");
         JackalNewJackalCreateSidekick = CustomOption.Create(Optioninfo.OptionId++, Optioninfo.SupportSHR, Optioninfo.RoleOption.type,
-            "JackalNewJackalCreateSidekickSetting", false, JackalCreateSidekick);           
+            "JackalNewJackalCreateSidekickSetting", false, JackalCreateSidekick);
     }
 
     public CustomButtonInfo JackalKillButton;
@@ -190,7 +191,7 @@ public class Jackal : RoleBase, INeutral, IJackal, IRpcHandler, IFixedUpdaterAll
                     player.RpcSetRoleDesync(RoleTypes.Impostor, true, Player);
                 if (isOldImpostor)
                 {
-                    foreach (PlayerControl p in PlayerControl.AllPlayerControls)
+                    foreach (PlayerControl p in CachedPlayer.AllPlayers.AsSpan())
                     {
                         if (p == player)
                             continue;
@@ -262,7 +263,7 @@ public class Jackal : RoleBase, INeutral, IJackal, IRpcHandler, IFixedUpdaterAll
                 jackal.DesyncRole, true
             );
         }
-        foreach (PlayerControl player in PlayerControl.AllPlayerControls)
+        foreach (PlayerControl player in CachedPlayer.AllPlayers.AsSpan())
         {
             if (player.PlayerId == CreatedSidekickControl.PlayerId ||
                 player.PlayerId == Player.PlayerId)
@@ -326,7 +327,7 @@ public class Jackal : RoleBase, INeutral, IJackal, IRpcHandler, IFixedUpdaterAll
     }
     public void FixedUpdateAllSHR()
     {
-        if (AmongUsClient.Instance.AmHost)
+        if (AmongUsClient.Instance.AmHost && AntiBlackOut.GamePlayers == null)
             PromoteCheck(false);
     }
 
