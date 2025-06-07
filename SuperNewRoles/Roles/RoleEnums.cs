@@ -97,6 +97,15 @@ public enum RoleId : short
     MadHawk,
     WiseMan,
     Bullet,
+    Clergy,
+    NiceScientist,
+    EvilScientist,
+    Lighter,
+    Technician,
+    Medium,
+    MeetingSheriff,
+    DoubleKiller,
+    Finder,
 }
 
 public enum GhostRoleId : short
@@ -131,7 +140,6 @@ public enum QuoteMod : byte
     TheOtherRolesGMH,
     AuLibHalt,
     ExtremeRoles,
-    exr
 }
 
 public enum TeamTag : byte

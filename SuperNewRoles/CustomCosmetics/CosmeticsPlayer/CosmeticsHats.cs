@@ -27,8 +27,13 @@ public class CustomHatLayer : MonoBehaviour
     private const float ClimbZOffset = -0.02f;
     public SpriteAnimNodeSync spriteSyncNode;
 
-    public ICustomCosmeticHat CustomCosmeticHat { get; set; }
-    public ICosmeticData Hat => CustomCosmeticHat as ICosmeticData;
+    public Dictionary<PlayerOutfitType, ICosmeticData> Hats = new();
+    public PlayerOutfitType CurrentHatType;
+
+    public ICustomCosmeticHat CustomCosmeticHat => Hats.TryGetValue(CurrentHatType, out var hat) ? hat as ICustomCosmeticHat : null;
+    public ICosmeticData Hat => CustomCosmeticHat == null ? null : CustomCosmeticHat as ICosmeticData;
+
+    public ICosmeticData DefaultHat => Hats.TryGetValue(PlayerOutfitType.Default, out var hat) ? hat as ICosmeticData : null;
 
     public bool Visible
     {
@@ -57,11 +62,6 @@ public class CustomHatLayer : MonoBehaviour
         }
     }
 
-    public void OnDestroy()
-    {
-        // UnloadAsset();
-    }
-
     public bool HasHat()
     {
         if (Hat != null)
@@ -69,6 +69,28 @@ public class CustomHatLayer : MonoBehaviour
             return Hat.ProdId != HatData.EmptyId;
         }
         return false;
+    }
+
+    public void SetShapeshiftHat(string hatId, int color)
+    {
+        if (DestroyableSingleton<HatManager>.InstanceExists)
+        {
+            ICosmeticData hat;
+            if (hatId.StartsWith(CustomCosmeticsLoader.ModdedPrefix))
+                hat = CustomCosmeticsLoader.GetModdedHatData(hatId);
+            else
+                hat = new CosmeticDataWrapperHat(FastDestroyableSingleton<HatManager>.Instance.GetHatById(hatId));
+            Hats[PlayerOutfitType.Shapeshifted] = hat;
+            CurrentHatType = PlayerOutfitType.Shapeshifted;
+            SetHat(color);
+        }
+    }
+
+    public void FinishShapeshift(int color)
+    {
+        CurrentHatType = PlayerOutfitType.Default;
+        SetHat(color);
+        PopulateFromViewData();
     }
 
     public void SetHat(string hatId, int color)
@@ -93,7 +115,7 @@ public class CustomHatLayer : MonoBehaviour
             BackLayer.sprite = null;
             FrontLayer.sprite = null;
         }
-        CustomCosmeticHat = hat as ICustomCosmeticHat;
+        Hats[CurrentHatType] = hat;
         Logger.Info($"SetHat: {hat.ProdId}");
         SetHat(color);
     }

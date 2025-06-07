@@ -62,8 +62,13 @@ public class CustomVisorLayer : MonoBehaviour
         }
     }
 
-    public ICustomCosmeticVisor CustomCosmeticVisor { get; set; }
-    public ICosmeticData Visor => CustomCosmeticVisor as ICosmeticData;
+    public Dictionary<PlayerOutfitType, ICosmeticData> Visors = new();
+    public PlayerOutfitType CurrentVisorType;
+
+    public ICustomCosmeticVisor CustomCosmeticVisor => Visors.TryGetValue(CurrentVisorType, out var visor) ? visor as ICustomCosmeticVisor : null;
+    public ICosmeticData Visor => CustomCosmeticVisor == null ? null : CustomCosmeticVisor as ICosmeticData;
+
+    public ICosmeticData DefaultVisor => Visors.TryGetValue(PlayerOutfitType.Default, out var visor) ? visor as ICosmeticData : null;
 
     public void SetVisor(string visorId, int colorId)
     {
@@ -80,6 +85,37 @@ public class CustomVisorLayer : MonoBehaviour
         }
     }
 
+    public void SetShapeshiftVisor(string visorId, int colorId)
+    {
+        if (DestroyableSingleton<HatManager>.InstanceExists)
+        {
+            ICosmeticData visor;
+            if (visorId.StartsWith(CustomCosmeticsLoader.ModdedPrefix))
+                visor = CustomCosmeticsLoader.GetModdedVisorData(visorId);
+            else
+                visor = new CosmeticDataWrapperVisor(FastDestroyableSingleton<HatManager>.Instance.GetVisorById(visorId));
+            Visors[PlayerOutfitType.Shapeshifted] = visor;
+            CurrentVisorType = PlayerOutfitType.Shapeshifted;
+            SetMaterialColor(colorId);
+            // UnloadAsset();
+            Visor.LoadAsync(() =>
+            {
+                PopulateFromViewData();
+            });
+        }
+    }
+
+    public void FinishShapeshift(int colorId)
+    {
+        CurrentVisorType = PlayerOutfitType.Default;
+        SetMaterialColor(colorId);
+        // UnloadAsset();
+        Visor.LoadAsync(() =>
+        {
+            PopulateFromViewData();
+        });
+    }
+
     public void SetVisor(ICosmeticData data, int color)
     {
         Logger.Info($"SetVisor: {data.ProdId}");
@@ -87,7 +123,7 @@ public class CustomVisorLayer : MonoBehaviour
         {
             Image.sprite = null;
         }
-        CustomCosmeticVisor = data as ICustomCosmeticVisor;
+        Visors[CurrentVisorType] = data;
         SetMaterialColor(color);
         // UnloadAsset();
         Visor.LoadAsync(() =>
@@ -214,11 +250,6 @@ public class CustomVisorLayer : MonoBehaviour
     public void SetVisorColor(Color color)
     {
         Image.color = color;
-    }
-
-    public void OnDestroy()
-    {
-        UnloadAsset();
     }
 
     private int count = 0;

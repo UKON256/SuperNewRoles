@@ -12,6 +12,7 @@ using SuperNewRoles.Modules;
 using UnityEngine.Networking;
 using System.Text;
 using System.Collections;
+using System.IO.Compression;
 
 namespace SuperNewRoles.RequestInGame;
 
@@ -31,12 +32,14 @@ public class RequestInGameManager
         public string title { get; }
         public string first_message { get; }
         public DateTime created_at { get; }
-        public Thread(string thread_id, string title, string first_message, string created_at)
+        public bool unread { get; }
+        public Thread(string thread_id, string title, string first_message, string created_at, bool unread)
         {
             this.thread_id = thread_id;
             this.title = title;
             this.first_message = first_message;
             this.created_at = DateTime.Parse(created_at);
+            this.unread = unread;
         }
     }
     public class Message
@@ -107,6 +110,7 @@ public class RequestInGameManager
         }
         createRequest.Dispose();
     }
+    // unreadonly not working
     public static IEnumerator GetThreads(Action<List<Thread>> callback, bool unreadOnly = false)
     {
         string url = $"{SNRURLs.ReportInGameAPI}/getThreads/";
@@ -135,7 +139,8 @@ public class RequestInGameManager
                         string threadId = threadDict.TryGetValue("thread_id", out var idVal) && idVal is string idStr ? idStr : string.Empty;
                         string firstMessage = threadDict.TryGetValue("message", out var msgVal) && msgVal is string msgStr ? msgStr : string.Empty;
                         string createdAt = threadDict.TryGetValue("created_at", out var caVal) && caVal is string caStr ? caStr : string.Empty;
-                        threads.Add(new Thread(threadId, title, firstMessage, createdAt));
+                        bool unread = threadDict.TryGetValue("has_unread_messages", out var unreadVal) && unreadVal is bool unreadBool ? unreadBool : false;
+                        threads.Add(new Thread(threadId, title, firstMessage, createdAt, unread));
                     }
                 }
             }
@@ -217,6 +222,7 @@ public class RequestInGameManager
         additionalInfo["message"] = description;
         additionalInfo["title"] = title;
         string data = JsonConvert.SerializeObject(additionalInfo.Wrap());
+
         string url = $"{SNRURLs.ReportInGameAPI}/sendRequest/{type}";
         var request = new UnityWebRequest(url, "POST")
         {
@@ -252,5 +258,24 @@ public class RequestInGameManager
         }
         request.Dispose();
         callback(success);
+    }
+
+    public static IEnumerator hasNotifications(Action<bool> callback)
+    {
+        string url = $"{SNRURLs.ReportInGameAPI}/getNotification/";
+        var request = UnityWebRequest.Get(url);
+        string token = string.Empty;
+        yield return GetOrCreateToken(t => token = t);
+        request.SetRequestHeader("Authorization", $"Bearer {token}");
+        yield return request.SendWebRequest();
+
+        bool hasNotifications = false;
+        if (request.result == UnityWebRequest.Result.Success)
+        {
+            var root = JsonParser.Parse(request.downloadHandler.text) as Dictionary<string, object>;
+            if (root != null && root.TryGetValue("notification", out var notificationVal) && notificationVal is bool notificationBool)
+                hasNotifications = notificationBool;
+        }
+        callback(hasNotifications);
     }
 }

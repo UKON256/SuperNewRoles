@@ -3,6 +3,7 @@ using HarmonyLib;
 using SuperNewRoles.CustomCosmetics.UI;
 using SuperNewRoles.Modules;
 using SuperNewRoles.Roles.Modifiers;
+using TMPro;
 using UnityEngine;
 using static CosmeticsLayer;
 
@@ -57,6 +58,16 @@ public static class AmongUsClient_CoStartGame
     {
         PlayerControlRpcExtensions.RpcCustomSetCosmetics(PlayerControl.LocalPlayer.PlayerId, CostumeTabType.Hat2, CustomCosmeticsSaver.CurrentHat2Id, (PlayerControl.LocalPlayer.Data?.DefaultOutfit?.ColorId).GetValueOrDefault());
         PlayerControlRpcExtensions.RpcCustomSetCosmetics(PlayerControl.LocalPlayer.PlayerId, CostumeTabType.Visor2, CustomCosmeticsSaver.CurrentVisor2Id, (PlayerControl.LocalPlayer.Data?.DefaultOutfit?.ColorId).GetValueOrDefault());
+        if (ModHelpers.IsHnS())
+        {
+            foreach (ExPlayerControl pc in PlayerControl.AllPlayerControls)
+            {
+                if (!pc.Data.Role.IsImpostor) continue;
+                CustomCosmeticsLayer customCosmeticsLayer = CustomCosmeticsLayers.ExistsOrInitialize(pc.cosmetics);
+                customCosmeticsLayer.visor1.gameObject.SetActive(false);
+                customCosmeticsLayer.visor2.gameObject.SetActive(false);
+            }
+        }
     }
 }
 [HarmonyPatch(typeof(VisorLayer), nameof(VisorLayer.SetFlipX))]
@@ -187,8 +198,22 @@ public static class PoolablePlayer_UpdateFromEitherPlayerDataOrCache
         if (pData.Object == null) return;
         CustomCosmeticsLayer customCosmeticsLayer = CustomCosmeticsLayers.ExistsOrInitialize(__instance.cosmetics);
         CustomCosmeticsLayer pcLayer = CustomCosmeticsLayers.ExistsOrInitialize(pData.Object.cosmetics);
-        customCosmeticsLayer?.hat2?.SetHat(pcLayer.hat2.Hat?.ProdId ?? "", pData.DefaultOutfit.ColorId);
-        customCosmeticsLayer?.visor2?.SetVisor(pcLayer.visor2.Visor?.ProdId ?? "", pData.DefaultOutfit.ColorId);
+        customCosmeticsLayer?.hat2?.SetHat(pcLayer.hat2.DefaultHat?.ProdId ?? "", pData.DefaultOutfit.ColorId);
+        customCosmeticsLayer?.visor2?.SetVisor(pcLayer.visor2.DefaultVisor?.ProdId ?? "", pData.DefaultOutfit.ColorId);
+        customCosmeticsLayer?.hat2?.SetMaskType(maskType);
+        customCosmeticsLayer?.visor2?.SetMaskType(maskType);
+    }
+}
+[HarmonyPatch(typeof(PoolablePlayer), nameof(PoolablePlayer.UpdateFromPlayerData))]
+public static class PoolablePlayer_UpdateFromPlayerData
+{
+    public static void Postfix(PoolablePlayer __instance, NetworkedPlayerInfo pData, PlayerMaterial.MaskType maskType)
+    {
+        if (pData.Object == null) return;
+        CustomCosmeticsLayer customCosmeticsLayer = CustomCosmeticsLayers.ExistsOrInitialize(__instance.cosmetics);
+        CustomCosmeticsLayer pcLayer = CustomCosmeticsLayers.ExistsOrInitialize(pData.Object.cosmetics);
+        customCosmeticsLayer?.hat2?.SetHat(pcLayer.hat2.DefaultHat?.ProdId ?? "", pData.DefaultOutfit.ColorId);
+        customCosmeticsLayer?.visor2?.SetVisor(pcLayer.visor2.DefaultVisor?.ProdId ?? "", pData.DefaultOutfit.ColorId);
         customCosmeticsLayer?.hat2?.SetMaskType(maskType);
         customCosmeticsLayer?.visor2?.SetMaskType(maskType);
     }
@@ -331,9 +356,9 @@ public static class MeetingHud_PopulateButtons
                 ExPlayerControl player = ExPlayerControl.ById(playerState.TargetPlayerId);
                 CustomCosmeticsLayer customCosmeticsLayer = CustomCosmeticsLayers.ExistsOrInitialize(player.cosmetics);
                 CustomCosmeticsLayer pcLayer = CustomCosmeticsLayers.ExistsOrInitialize(player.cosmetics);
-                Logger.Info($"{player.Data.PlayerId} : {pcLayer.hat2.Hat?.ProdId} {pcLayer.visor2.Visor?.ProdId}");
-                customCosmeticsLayer?.hat2?.SetHat(pcLayer.hat2.Hat?.ProdId ?? "", player.Data.DefaultOutfit.ColorId);
-                customCosmeticsLayer?.visor2?.SetVisor(pcLayer.visor2.Visor?.ProdId ?? "", player.Data.DefaultOutfit.ColorId);
+                Logger.Info($"{player.Data.PlayerId} : {pcLayer.hat2.DefaultHat?.ProdId} {pcLayer.visor2.DefaultVisor?.ProdId}");
+                customCosmeticsLayer?.hat2?.SetHat(pcLayer.hat2.DefaultHat?.ProdId ?? "", player.Data.DefaultOutfit.ColorId);
+                customCosmeticsLayer?.visor2?.SetVisor(pcLayer.visor2.DefaultVisor?.ProdId ?? "", player.Data.DefaultOutfit.ColorId);
                 // fix mask
                 customCosmeticsLayer.visor1.Image.maskInteraction = SpriteMaskInteraction.VisibleInsideMask;
                 customCosmeticsLayer.visor2.Image.maskInteraction = SpriteMaskInteraction.VisibleInsideMask;
@@ -351,6 +376,67 @@ public static class MeetingHud_Update
             CustomCosmeticsLayer customCosmeticsLayer = CustomCosmeticsLayers.ExistsOrInitialize(playerState.PlayerIcon.cosmetics);
             customCosmeticsLayer.visor1.Image.maskInteraction = SpriteMaskInteraction.VisibleInsideMask;
             customCosmeticsLayer.visor2.Image.maskInteraction = SpriteMaskInteraction.VisibleInsideMask;
+        }
+    }
+}
+[HarmonyPatch(typeof(AmongUsClient), nameof(AmongUsClient.CoStartGame))]
+public static class AmongUsClient_CoStartGame_Patch
+{
+    public static void Postfix()
+    {
+        foreach (ExPlayerControl player in ExPlayerControl.ExPlayerControls)
+        {
+            CustomCosmeticsLayer customCosmeticsLayer = CustomCosmeticsLayers.ExistsOrInitialize(player.cosmetics);
+
+            foreach (var textMeshPro in player.cosmetics.nameTextContainer.GetComponentsInChildren<TextMeshPro>())
+            {
+                textMeshPro.sortingOrder = 500;
+            }
+        }
+    }
+}
+[HarmonyPatch(typeof(ExileController), nameof(ExileController.Begin))]
+public static class ExileController_Begin
+{
+    public static void Postfix(ExileController __instance)
+    {
+        if (__instance.initData.networkedPlayer == null) return;
+        if (__instance.initData.networkedPlayer.Object == null) return;
+        __instance.Player.UpdateFromEitherPlayerDataOrCache(__instance.initData.networkedPlayer, PlayerOutfitType.Default, PlayerMaterial.MaskType.Exile, false, (Il2CppSystem.Action)(() =>
+        {
+            SkinViewData skinViewData = null;
+            skinViewData = (!(GameManager.Instance != null)) ? __instance.Player.GetSkinView() : ShipStatus.Instance.CosmeticsCache.GetSkin(__instance.initData.outfit.SkinId);
+            if (GameManager.Instance != null && !DestroyableSingleton<HatManager>.Instance.CheckLongModeValidCosmetic(__instance.initData.outfit.SkinId, __instance.Player.GetIgnoreLongMode()))
+            {
+                skinViewData = ShipStatus.Instance.CosmeticsCache.GetSkin("skin_None");
+            }
+            if (__instance.useIdleAnim)
+            {
+                __instance.Player.FixSkinSprite(skinViewData.IdleFrame);
+            }
+            else
+            {
+                __instance.Player.FixSkinSprite(skinViewData.EjectFrame);
+            }
+        }));
+        if (!__instance.useIdleAnim)
+        {
+            CustomCosmeticsLayer customCosmeticsLayer = CustomCosmeticsLayers.ExistsOrInitialize(__instance.Player.cosmetics);
+            customCosmeticsLayer.hat1.transform.localPosition = __instance.exileHatPosition;
+            customCosmeticsLayer.hat2.transform.localPosition = __instance.exileHatPosition;
+            customCosmeticsLayer.visor1.transform.localPosition = __instance.exileVisorPosition;
+            customCosmeticsLayer.visor2.transform.localPosition = __instance.exileVisorPosition;
+            switch ((MapNames)GameOptionsManager.Instance.CurrentGameOptions.MapId)
+            {
+                case MapNames.Airship:
+                    customCosmeticsLayer.ModdedCosmetics.transform.localPosition = new(0.6f, 0.4f, -0.0001f);
+                    customCosmeticsLayer.ModdedCosmetics.transform.Rotate(new(0, 0, 50));
+                    break;
+                case MapNames.Polus:
+                    customCosmeticsLayer.ModdedCosmetics.transform.localPosition = new(0.4f, 0.2f, -0.0001f);
+                    customCosmeticsLayer.ModdedCosmetics.transform.Rotate(new(0, 0, 10));
+                    break;
+            }
         }
     }
 }
@@ -382,6 +468,35 @@ public static class MushroomMixupPlayerAnimation_CoPlay
         instance.sprite.sortingOrder = 1000;
         if (((ExPlayerControl)instance.player).TryGetAbility<JumboAbility>(out var jumboAbility))
             instance.transform.localScale = Vector3.one * ((jumboAbility._currentSize + 1f) / 2.7f);
+    }
+}
+[HarmonyPatch(typeof(RoleEffectAnimation), nameof(RoleEffectAnimation.Play))]
+public static class RoleEffectAnimation_Play
+{
+    public static void Postfix(RoleEffectAnimation __instance)
+    {
+        __instance.Renderer.sortingOrder = 1000;
+    }
+}
+[HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.Shapeshift))]
+public static class PlayerControl_Shapeshift
+{
+    public static void Postfix(PlayerControl __instance, PlayerControl targetPlayer, bool animate)
+    {
+        CustomCosmeticsLayer customCosmeticsLayer = CustomCosmeticsLayers.ExistsOrInitialize(__instance.cosmetics);
+        CustomCosmeticsLayer pcLayer = CustomCosmeticsLayers.ExistsOrInitialize(targetPlayer.cosmetics);
+        if (__instance == targetPlayer)
+        {
+            customCosmeticsLayer?.hat1?.FinishShapeshift(__instance.Data.DefaultOutfit.ColorId);
+            customCosmeticsLayer?.hat2?.FinishShapeshift(__instance.Data.DefaultOutfit.ColorId);
+            customCosmeticsLayer?.visor1?.FinishShapeshift(__instance.Data.DefaultOutfit.ColorId);
+            customCosmeticsLayer?.visor2?.FinishShapeshift(__instance.Data.DefaultOutfit.ColorId);
+            return;
+        }
+        customCosmeticsLayer?.hat1?.SetShapeshiftHat(pcLayer.hat1.DefaultHat?.ProdId ?? "", targetPlayer.Data.DefaultOutfit.ColorId);
+        customCosmeticsLayer?.visor1?.SetShapeshiftVisor(pcLayer.visor1.DefaultVisor?.ProdId ?? "", targetPlayer.Data.DefaultOutfit.ColorId);
+        customCosmeticsLayer?.hat2?.SetShapeshiftHat(pcLayer.hat2.DefaultHat?.ProdId ?? "", targetPlayer.Data.DefaultOutfit.ColorId);
+        customCosmeticsLayer?.visor2?.SetShapeshiftVisor(pcLayer.visor2.DefaultVisor?.ProdId ?? "", targetPlayer.Data.DefaultOutfit.ColorId);
     }
 }
 [HarmonyPatch(typeof(MushroomMixupSabotageSystem), nameof(MushroomMixupSabotageSystem.MushroomMixUp))]
