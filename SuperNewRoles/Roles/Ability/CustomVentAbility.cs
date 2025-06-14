@@ -6,10 +6,11 @@ using System.Collections.Generic;
 using Il2CppInterop.Runtime.InteropTypes.Arrays;
 using System.Linq;
 using HarmonyLib;
+using SuperNewRoles.CustomObject;
 
 namespace SuperNewRoles.Roles.Ability;
 
-public class CustomVentAbility : CustomButtonBase
+public class CustomVentAbility : CustomButtonBase, IButtonEffect
 {
     public Func<bool> CanUseVent { get; }
     public Func<float?> VentCooldown { get; }
@@ -21,11 +22,30 @@ public class CustomVentAbility : CustomButtonBase
     public override float DefaultTimer => VentCooldown?.Invoke() ?? 0;
     public override bool IsFirstCooldownTenSeconds => DefaultTimer > 0.1f;
 
+    public bool isEffectActive { get; set; }
+
+    public Action OnEffectEnds => () => { if (VentDuration?.Invoke() != null && Vent.currentVent != null) exitVent(); };
+
+    public float EffectDuration => VentDuration?.Invoke() ?? 0f;
+
+    public float EffectTimer { get; set; }
+
+    public bool effectCancellable => true;
+
+    //public bool IsEffectDurationInfinity => VentDuration?.Invoke() == null;
+
     public CustomVentAbility(Func<bool> canUseVent, Func<float?> ventCooldown = null, Func<float?> ventDuration = null)
     {
         CanUseVent = canUseVent;
         VentCooldown = ventCooldown;
         VentDuration = ventDuration;
+    }
+
+    private void exitVent()
+    {
+        if (Vent.currentVent != null)
+            Vent.currentVent.SetButtons(false);
+        PlayerControl.LocalPlayer.MyPhysics.RpcExitVent(Vent.currentVent.Id);
     }
 
     public override void OnClick()
@@ -38,8 +58,7 @@ public class CustomVentAbility : CustomButtonBase
             // ベントに入っている途中に出れないように
             if (num < 10000)
             {
-                Vent.currentVent.SetButtons(false);
-                PlayerControl.LocalPlayer.MyPhysics?.RpcExitVent(Vent.currentVent.Id);
+                exitVent();
             }
             return;
         }
@@ -172,6 +191,15 @@ public class VentSetButtonsPatch
             __result = 0;
             return false;
         }
+
+        if (WormHole.IsWormHole(__instance) && !((ExPlayerControl)pc.Object).IsImpostor())
+        {
+            __result = float.MaxValue;
+            canUse = false;
+            couldUse = false;
+            return false;
+        }
+
         if (pc.Object.inVent && Vent.currentVent != null)
         {
             if (__instance.Id == Vent.currentVent.Id)
